@@ -1,5 +1,5 @@
+import { SubscriptionStats } from '@/components/subscriptions/SubscriptionStats';
 import CustomLoader from '@/components/ui/CustomLoader';
-import { ThemeColorWidget } from '@/components/ui/ThemeColorWidget';
 import { useThemeColors } from '@/hooks/use-themed-styles';
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
@@ -165,12 +165,61 @@ export default function HomeScreen() {
   };
 
   const handleAlphabetNavigation = () => {
-    router.push('/(rhapsodylanguages)/(drawer)/alphabet/list');
+    router.push('/(rhapsodylanguages)/(drawer)/alphabet');
   };
 
   const handleSubscriptionNavigation = () => {
     router.push('/(rhapsodylanguages)/(drawer)/(tabs)/subscriptions');
   };
+
+  const renderTestMediaSection = () => (
+    <View style={{ paddingHorizontal: 20, paddingVertical: 24 }}>
+      <Text style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 8, color: colors.text }}>
+        🎬 Test Media System
+      </Text>
+      <Text style={{ fontSize: 16, marginBottom: 20, color: colors.textLight }}>
+        Test the new MediaAPI and video/audio system with sample content.
+      </Text>
+      
+      <View style={languageCategoriesStyles.cardsContainer}>
+        <TouchableOpacity 
+          style={[languageCategoriesStyles.cardContainer, { backgroundColor: colors.primary }]}
+          onPress={() => router.push('/(rhapsodylanguages)/(drawer)/listen/English')}
+        >
+          <LinearGradient
+            colors={[colors.primary || '#007AFF', colors.secondary || '#5856D6']}
+            style={[languageCategoriesStyles.cardSide, { padding: 16 }]}
+          >
+            <Ionicons name="headset" size={40} color="#FFFFFF" />
+            <Text style={{ color: '#FFFFFF', fontSize: 16, fontWeight: 'bold', marginTop: 8 }}>
+              Test Audio
+            </Text>
+            <Text style={{ color: '#FFFFFF', fontSize: 12, opacity: 0.9 }}>
+              Daily audio lesson
+            </Text>
+          </LinearGradient>
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={[languageCategoriesStyles.cardContainer, { backgroundColor: colors.secondary }]}
+          onPress={() => router.push('/(rhapsodylanguages)/(drawer)/watch/English')}
+        >
+          <LinearGradient
+            colors={[colors.secondary || '#5856D6', colors.primary || '#007AFF']}
+            style={[languageCategoriesStyles.cardSide, { padding: 16 }]}
+          >
+            <Ionicons name="videocam" size={40} color="#FFFFFF" />
+            <Text style={{ color: '#FFFFFF', fontSize: 16, fontWeight: 'bold', marginTop: 8 }}>
+              Test Video
+            </Text>
+            <Text style={{ color: '#FFFFFF', fontSize: 12, opacity: 0.9 }}>
+              Daily video lesson
+            </Text>
+          </LinearGradient>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
 
   // Language Categories Styles
   const languageCategoriesStyles = StyleSheet.create({
@@ -620,26 +669,13 @@ export default function HomeScreen() {
     <View style={{ flex: 1 }}>
       <ScrollView style={commonStyles.container} showsVerticalScrollIndicator={false}>
         {renderCarousel()}
+        <SubscriptionStats />
+        {renderTestMediaSection()}
         {renderAboutSection()}
         {renderLanguageCategories()}
         {renderUpcomingPrograms()}
         {renderWorkforceSection()}
       </ScrollView>
-      
-      {/* Floating Theme Widget */}
-      <View style={{
-        position: 'absolute',
-        top: '50%',
-        right: 20,
-        zIndex: 1000,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 4,
-        elevation: 5,
-      }}>
-        <ThemeColorWidget size="medium" showText={false} />
-      </View>
     </View>
   );
 }

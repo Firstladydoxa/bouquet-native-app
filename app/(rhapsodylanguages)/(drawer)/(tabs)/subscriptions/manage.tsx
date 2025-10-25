@@ -1,3 +1,4 @@
+import { GlobalReminderSystem } from '@/components/subscriptions/GlobalReminderSystem';
 import CustomLoader from '@/components/ui/CustomLoader';
 import { useSubscription } from '@/contexts';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -9,12 +10,12 @@ import * as Sharing from 'expo-sharing';
 import * as WebBrowser from 'expo-web-browser';
 import React, { useState } from 'react';
 import {
-  Alert,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View
+    Alert,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -37,6 +38,41 @@ export default function ManageSubscriptionScreen() {
 
   // Get theme colors
   const { colors } = useTheme();
+
+  // Helper function to get status display
+  const getStatusDisplay = (status: string) => {
+    switch (status?.toLowerCase()) {
+      case 'active':
+        return { text: 'ACTIVE', color: design.success, bgColor: design.successBg };
+      case 'free trial':
+        return { text: 'FREE TRIAL', color: '#FF6B35', bgColor: '#FF6B3515' };
+      case 'cancelled':
+        return { text: 'CANCELLED', color: '#DC2626', bgColor: '#DC262615' };
+      case 'expired':
+        return { text: 'EXPIRED', color: '#9CA3AF', bgColor: '#9CA3AF15' };
+      case 'past_due':
+        return { text: 'PAST DUE', color: '#F59E0B', bgColor: '#F59E0B15' };
+      default:
+        return { text: 'UNKNOWN', color: '#6B7280', bgColor: '#6B728015' };
+    }
+  };
+
+  // Helper function to get language display
+  const getLanguageDisplay = (languages: string[]) => {
+    if (!languages || languages.length === 0) return 'N/A';
+    
+    // Check for wildcard (free trial all languages)
+    if (languages.includes('*')) {
+      return 'All Languages (Free Trial)';
+    }
+    
+    // If more than 3 languages, show count
+    if (languages.length > 3) {
+      return `${languages.slice(0, 3).join(', ')} + ${languages.length - 3} more`;
+    }
+    
+    return languages.join(', ');
+  };
 
   // Design System - Modern white background with theme accents
   const design = {
@@ -185,6 +221,9 @@ export default function ManageSubscriptionScreen() {
           </Text>
         </View>
 
+        {/* Global Reminder System */}
+        <GlobalReminderSystem />
+
         {/* Active Subscription Card */}
         {subscriptionDetails && (
           <LinearGradient
@@ -202,15 +241,16 @@ export default function ManageSubscriptionScreen() {
                 </LinearGradient>
                 <View style={styles.featureCardTitleContainer}>
                   <Text style={[styles.featureCardTitle, { color: design.primary, fontFamily: 'BerkshireSwash_400Regular' }]}>
-                    Active Plan
+                    {subscriptionDetails.status === 'free trial' ? 'Free Trial Plan' : 'Active Plan'}
                   </Text>
-                  <View style={[styles.statusBadge, { backgroundColor: design.successBg }]}>
-                    <View style={[styles.statusDot, { backgroundColor: design.success }]} />
-                    <Text style={[styles.statusText, { color: design.success }]}>
-                      ACTIVE
-                    </Text>
-                  </View>
                 </View>
+              </View>
+              {/* Status Badge moved here */}
+              <View style={[styles.statusBadge, { backgroundColor: getStatusDisplay(subscriptionDetails.status).bgColor }]}>
+                <View style={[styles.statusDot, { backgroundColor: getStatusDisplay(subscriptionDetails.status).color }]} />
+                <Text style={[styles.statusText, { color: getStatusDisplay(subscriptionDetails.status).color }]}>
+                  {getStatusDisplay(subscriptionDetails.status).text}
+                </Text>
               </View>
             </View>
 
@@ -219,22 +259,29 @@ export default function ManageSubscriptionScreen() {
               <View style={styles.planHeader}>
                 <View>
                   <Text style={[styles.planName, { color: design.tertiary, fontFamily: 'BerkshireSwash_400Regular' }]}>
-                    {subscriptionDetails.package?.label || 'Premium Plan'}
+                    {subscriptionDetails.status === 'free trial' 
+                      ? 'Free Trial Access' 
+                      : (subscriptionDetails.package?.label || 'Premium Plan')
+                    }
                   </Text>
                   <View style={styles.planPriceRow}>
                     <Text style={[styles.planPrice, { color: design.primary }]}>
-                      ${subscriptionDetails.package?.price}
+                      {subscriptionDetails.status === 'free trial' ? 'FREE' : `$${subscriptionDetails.package?.price}`}
                     </Text>
                     <Text style={[styles.planDuration, { color: design.secondary }]}>
-                      / {subscriptionDetails.package?.duration || 'month'} days
+                      {subscriptionDetails.status === 'free trial' 
+                        ? 'Until Dec 31, 2025'
+                        : `/ ${subscriptionDetails.package?.duration || 'month'} days`
+                      }
                     </Text>
                   </View>
                 </View>
               </View>
             </View>
 
-            {/* Subscription Details Grid */}
+            {/* Subscription Details Grid - Two rows layout */}
             <View style={styles.detailsContainer}>
+              {/* First Row: Start Date and Expires */}
               <View style={[styles.detailRow, { borderBottomColor: design.borderLight }]}>
                 <View style={styles.detailItem}>
                   <View style={[styles.detailIconWrapper, { backgroundColor: design.primary + '15' }]}>
@@ -274,30 +321,18 @@ export default function ManageSubscriptionScreen() {
                 </View>
               </View>
 
-              <View style={styles.detailRow}>
-                <View style={styles.detailItem}>
+              {/* Second Row: Languages (Full Width) */}
+              <View style={[styles.detailRow, { borderBottomWidth: 0 }]}>
+                <View style={[styles.detailItem, { flex: 1 }]}>
                   <View style={[styles.detailIconWrapper, { backgroundColor: design.tertiary + '15' }]}>
                     <Ionicons name="language-outline" size={20} color={design.tertiary} />
                   </View>
-                  <View style={styles.detailTextContainer}>
+                  <View style={[styles.detailTextContainer, { flex: 1 }]}>
                     <Text style={[styles.detailLabel, { color: design.textTertiary }]}>
                       Language{subscriptionDetails.language && subscriptionDetails.language.length > 1 ? 's' : ''}
                     </Text>
-                    <Text style={[styles.detailValue, { color: design.textPrimary }]} numberOfLines={1}>
-                      {subscriptionDetails.language && subscriptionDetails.language.length > 0 
-                        ? subscriptionDetails.language.join(', ') 
-                        : 'N/A'}
-                    </Text>
-                  </View>
-                </View>
-                <View style={styles.detailItem}>
-                  <View style={[styles.detailIconWrapper, { backgroundColor: design.successBg }]}>
-                    <Ionicons name="shield-checkmark" size={20} color={design.success} />
-                  </View>
-                  <View style={styles.detailTextContainer}>
-                    <Text style={[styles.detailLabel, { color: design.textTertiary }]}>Status</Text>
-                    <Text style={[styles.detailValue, { color: design.success }]}>
-                      {subscriptionDetails.status || 'Active'}
+                    <Text style={[styles.detailValue, { color: design.textPrimary, flexWrap: 'wrap' }]}>
+                      {getLanguageDisplay(subscriptionDetails.language || [])}
                     </Text>
                   </View>
                 </View>
@@ -595,10 +630,14 @@ const styles = StyleSheet.create({
   },
   featureCardHeader: {
     marginBottom: 24,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   featureCardTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    flex: 1,
   },
   featureIconContainer: {
     marginHorizontal: 8,

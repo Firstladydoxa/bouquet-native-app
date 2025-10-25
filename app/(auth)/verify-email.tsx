@@ -1,6 +1,8 @@
-import { useSignUp } from "@/contexts";
+import { useAuth } from '@/contexts';
 import { useThemeColors, useThemedStyles } from '@/hooks/use-themed-styles';
+import { AuthAPI } from '@/services/authApi';
 import { Image } from "expo-image";
+import { useRouter } from 'expo-router';
 import React, { useState } from "react";
 import {
     Alert,
@@ -16,32 +18,56 @@ import { createAuthStyles } from "../../assets/styles/auth.themed.styles";
 
 const VerifyEmail = ({ email, onBack }: { email: string; onBack: () => void; }) => {
 
-  const { isLoaded, signUp, setActive } = useSignUp();
+  const router = useRouter();
+  const { signIn } = useAuth();
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
+  const [resending, setResending] = useState(false);
 
   // Use themed styles and colors
   const authStyles = useThemedStyles(createAuthStyles);
   const colors = useThemeColors();
 
   const handleVerification = async () => {
-    if (!isLoaded) return;
+    if (!code.trim()) {
+      Alert.alert("Error", "Please enter the verification code");
+      return;
+    }
 
     setLoading(true);
     try {
-      const signUpAttempt = await signUp.attemptEmailAddressVerification({ code });
+      const result = await AuthAPI.verifyEmail({
+        email,
+        verification_code: code,
+      });
 
-      if (signUpAttempt.status === "complete") {
-        await setActive({ session: signUpAttempt.createdSessionId });
-      } else {
-        Alert.alert("Error", "Verification failed. Please try again.");
-        console.error(JSON.stringify(signUpAttempt, null, 2));
-      }
+      Alert.alert(
+        "Success", 
+        "Email verified successfully! You can now sign in.",
+        [
+          {
+            text: "OK",
+            onPress: () => router.replace('/(auth)/sign-in')
+          }
+        ]
+      );
     } catch (err: any) {
-      Alert.alert("Error", err.errors?.[0]?.message || "Verification failed");
-      console.error(JSON.stringify(err, null, 2));
+      Alert.alert("Error", err.message || "Verification failed. Please try again.");
+      console.error('Verification error:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResendCode = async () => {
+    setResending(true);
+    try {
+      await AuthAPI.resendVerificationEmail(email);
+      Alert.alert("Success", "Verification code sent! Please check your email.");
+    } catch (err: any) {
+      Alert.alert("Error", err.message || "Failed to resend code. Please try again.");
+    } finally {
+      setResending(false);
     }
   };
 
@@ -91,6 +117,18 @@ const VerifyEmail = ({ email, onBack }: { email: string; onBack: () => void; }) 
               activeOpacity={0.8}
             >
               <Text style={authStyles.buttonText}>{loading ? "Verifying..." : "Verify Email"}</Text>
+            </TouchableOpacity>
+
+            {/* Resend Code */}
+            <TouchableOpacity 
+              style={[authStyles.linkContainer, { marginTop: 16 }]} 
+              onPress={handleResendCode}
+              disabled={resending}
+            >
+              <Text style={authStyles.linkText}>
+                {resending ? "Sending..." : "Didn't receive the code? "}
+                {!resending && <Text style={authStyles.link}>Resend</Text>}
+              </Text>
             </TouchableOpacity>
 
             {/* Back to Sign Up */}

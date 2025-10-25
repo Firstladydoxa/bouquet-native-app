@@ -1,6 +1,6 @@
 // Payment API Service for handling Stripe payment operations
 
-import type { Language, PaymentHistoryResponse, PaymentIntentRequest, PaymentIntentResponse } from '@/types';
+import type { ApiResponse, FreeTrialRequest, Language, PaymentHistoryResponse, PaymentIntentRequest, PaymentIntentResponse, SubscriptionDetails } from '@/types';
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || 'https://mediathek.tniglobal.org/api';
 
@@ -206,6 +206,65 @@ export const PaymentApi = {
       return result;
     } catch (error) {
       console.error('Payment Intent Error:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Start free trial for user
+   * @param data Free trial request data
+   * @param token Authentication token
+   * @returns Free trial response
+   */
+  startFreeTrial: async (data: FreeTrialRequest, token: string | null): Promise<ApiResponse<SubscriptionDetails>> => {
+    try {
+      console.log('Activating free trial with request:', data);
+      console.log('API URL:', `${API_BASE_URL}/subscription_payments`);
+      console.log('Token present:', !!token);
+
+      const response = await fetch(`${API_BASE_URL}/subscription_payments`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(data),
+      });
+
+      console.log('Free trial request Status:', response.status, response.statusText);
+
+      // Read the response body once and handle both success and error cases
+      let jsonData;
+      try {
+
+        jsonData = await response.json();
+        
+      } catch (parseError) {
+
+        console.error('Failed to parse payment intent response as JSON:', parseError);
+        throw new Error('Invalid JSON response from payment service');
+      }
+
+      console.log('Free Trial Response:', jsonData);
+
+      if (!response.ok) {
+        console.error('Free Trial Error Response:', jsonData);
+
+        const errorMessage = jsonData?.message?.text || 
+                            jsonData?.message || 
+                            jsonData?.error || 
+                            `HTTP ${response.status}: ${response.statusText}`;
+        
+        throw new Error(errorMessage);
+      }
+
+      console.log('Free Trial Response Parsed Response:', jsonData);
+      console.log('Free trial validation successful');
+      return jsonData.data;
+
+
+    } catch (error) {
+      console.error('Free Trial Error:', error);
       throw error;
     }
   },

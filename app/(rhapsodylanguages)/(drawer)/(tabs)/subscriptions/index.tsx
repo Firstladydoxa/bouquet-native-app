@@ -2,6 +2,7 @@ import CustomLoader from '@/components/ui/CustomLoader';
 import { ThemeSelector } from '@/components/ui/ThemeSelector';
 import { useAuth, useUser } from '@/contexts';
 import { useThemeColors } from '@/hooks/use-themed-styles';
+import { PaymentApi } from '@/services/paymentApi';
 import { RhapsodyLanguagesAPI } from '@/services/rhapsodylanguagesApi';
 import type { Package } from '@/types';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
@@ -14,7 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 export default function SubscriptionPackagesScreen() {
 
   const { user, isLoaded: userLoaded } = useUser();
-  const { getToken } = useAuth();
+  const { getToken, refreshUser } = useAuth();
   const router = useRouter();
   const colors = useThemeColors();
 
@@ -74,6 +75,63 @@ export default function SubscriptionPackagesScreen() {
 
     // Navigate to the dynamic payment route with the package ID
     router.push(`/subscriptions/${plan.id}` as any);
+  };
+
+  // Handle free trial activation
+  const handleFreeTrial = async (plan: Package) => {
+    if (!user) {
+      Alert.alert('Error', 'Please sign in to start free trial');
+      return;
+    }
+
+    Alert.alert(
+      'Start Free Trial',
+      'Get full access to all languages until December 31, 2025. No payment required!',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Start Trial',
+          onPress: async () => {
+            try {
+              setLoading(true);
+
+              const [freeTrialResponse] = await Promise.all([
+                  PaymentApi.startFreeTrial({
+                    userId: user.id,
+                    packageId: plan.id,
+                    language: '[*]',
+                    priceId: plan.stripe_price,
+                    amount: 0,
+                    currency: 'usd',
+                    method: 'No payment',
+                    type: 'free trial',
+                  }, await getToken()),
+              ]);
+
+              if(freeTrialResponse){
+                Alert.alert('Success', 'Free trial activated! You now have access to all languages until December 31, 2025.');
+                await refreshUser();
+              }
+
+              // Call backend API to activate free trial
+              // For now, update user metadata locally
+              //await user?.update({ metadata: { ...user.metadata, freeTrialActive: true, freeTrialEnd: '2025-12-31T23:59:59', }, });
+
+              Alert.alert(
+                'Free Trial Activated!',
+                'You now have access to all languages until December 31, 2025.',
+                [{ text: 'OK', onPress: () => router.push('/(rhapsodylanguages)/(drawer)/(tabs)') }]
+              );
+            } catch (error: any) {
+              console.error('Error activating free trial:', error);
+              Alert.alert('Error', error.message || 'Failed to activate free trial');
+            } finally {
+              setLoading(false);
+            }
+          },
+        },
+      ]
+    );
   };
 
   // Handle subscription cancellation
@@ -283,22 +341,41 @@ export default function SubscriptionPackagesScreen() {
                       </Text>
                     </TouchableOpacity>
                   ) : (
-                    <TouchableOpacity
-                      onPress={() => handleSubscribe(plan)}
-                      style={styles.subscribeButton}
-                      activeOpacity={0.9}
-                    >
-                      <LinearGradient
-                        colors={gradientColors}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 0 }}
-                        style={styles.subscribeGradient}
+                    <>
+                      <TouchableOpacity
+                        onPress={() => handleSubscribe(plan)}
+                        style={styles.subscribeButton}
+                        activeOpacity={0.9}
                       >
-                        <Text style={styles.subscribeButtonText}>
-                          Subscribe Now
+                        <LinearGradient
+                          colors={gradientColors}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 0 }}
+                          style={styles.subscribeGradient}
+                        >
+                          <Text style={styles.subscribeButtonText}>
+                            Subscribe Now
+                          </Text>
+                        </LinearGradient>
+                      </TouchableOpacity>
+
+                      {/* Free Trial Button */}
+                      <TouchableOpacity
+                        onPress={() => handleFreeTrial(plan)}
+                        style={styles.freeTrialButton}
+                        activeOpacity={0.8}
+                      >
+                        <View style={styles.freeTrialContent}>
+                          <Ionicons name="gift-outline" size={20} color={colors.primary || '#007AFF'} />
+                          <Text style={styles.freeTrialButtonText}>
+                            Start Free Trial
+                          </Text>
+                        </View>
+                        <Text style={styles.freeTrialSubtext}>
+                          Full access until Dec 31, 2025
                         </Text>
-                      </LinearGradient>
-                    </TouchableOpacity>
+                      </TouchableOpacity>
+                    </>
                   )}
                 </View>
               </View>
@@ -497,6 +574,42 @@ const createStyles = (colors: any) => StyleSheet.create({
     textAlign: 'center',
     fontWeight: 'bold',
     fontSize: 16,
+  },
+  freeTrialButton: {
+    backgroundColor: '#F0F9FF',
+    borderWidth: 2,
+    borderColor: '#BFDBFE',
+    borderRadius: 20,
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    marginTop: 12,
+    shadowColor: '#000000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  freeTrialContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  freeTrialButtonText: {
+    color: '#1E40AF',
+    fontSize: 16,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  freeTrialSubtext: {
+    color: '#60A5FA',
+    fontSize: 12,
+    textAlign: 'center',
+    marginTop: 4,
+    fontWeight: '500',
   },
   subscribeButton: {
     borderRadius: 20,

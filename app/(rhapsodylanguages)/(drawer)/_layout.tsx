@@ -1,5 +1,4 @@
 import { SignOutButton } from "@/components/auth/SignOutButton";
-import { ThemeColorWidget } from "@/components/ui/ThemeColorWidget";
 import { SubscriptionProvider } from "@/contexts";
 import { useThemeColors } from "@/hooks/use-themed-styles";
 import { Ionicons } from "@expo/vector-icons";
@@ -59,14 +58,6 @@ const CustomDrawerContent = (props: any) => {
     },
     drawerContentContainer: {
       flex: 1,
-    },
-    themeWidgetContainer: {
-      position: 'absolute',
-      bottom: 30,
-      left: 0,
-      right: 0,
-      alignItems: 'center',
-      paddingBottom: 10,
     }
   });
 
@@ -171,11 +162,6 @@ const CustomDrawerContent = (props: any) => {
       />
       
       </DrawerContentScrollView>
-      
-      {/* Theme Widget at Bottom Center */}
-      <View style={styles.themeWidgetContainer}>
-        <ThemeColorWidget size="large" showText={true} />
-      </View>
     </View>
   );
 };
@@ -197,11 +183,11 @@ export default function DrawerLayout() {
         }}
       >
         <Drawer.Screen
-          name="alphabet/list"
+          name="alphabet/index"
           options={{drawerLabel: 'By alphabet', title: 'Alphabet'}}
         />
         <Drawer.Screen
-          name="regions/list"
+          name="regions/index"
           options={{drawerLabel: 'By region', title: 'Regions'}}
         />
       </Drawer>

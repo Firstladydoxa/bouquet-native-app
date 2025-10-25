@@ -8,6 +8,7 @@ import { StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-reanimated';
 
+import { AppTour } from '@/components/ui/AppTour';
 import { ThemeColorWidget } from '@/components/ui/ThemeColorWidget';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { useColorScheme } from '@/hooks/use-color-scheme';
@@ -50,6 +51,8 @@ export default function RootLayout() {
                 <View style={styles.globalThemeWidget}>
                   <ThemeColorWidget size="medium" showText={false} />
                 </View>
+                {/* App Tour - First time user guide */}
+                <AppTour />
               </View>
             </NavigationThemeProvider>
           </AuthProvider>

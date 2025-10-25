@@ -1,5 +1,7 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
+import { Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { TabBarIcon } from '@/components/navigation/tabBarIcon';
 import { useSubscription } from '@/contexts';
@@ -8,6 +10,7 @@ import { useThemeColors } from '@/hooks/use-themed-styles';
 export default function RhapsodyLanguagesTabLayout() {
   const colors = useThemeColors();
   const { hasSubscription } = useSubscription();
+  const insets = useSafeAreaInsets();
 
   return (
    
@@ -18,11 +21,18 @@ export default function RhapsodyLanguagesTabLayout() {
         tabBarStyle: {
           backgroundColor: colors.card,
           borderTopColor: colors.border,
+          paddingBottom: Platform.OS === 'android' ? insets.bottom : 0,
+          height: Platform.OS === 'android' ? 60 + insets.bottom : 60,
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
         },
         tabBarLabelStyle: {
           color: colors.primary,
           fontWeight: 'bold',
           fontSize: 14,
+          paddingBottom: Platform.OS === 'android' ? 4 : 0,
         },
         tabBarInactiveTintColor: colors.textLight,
       }}>

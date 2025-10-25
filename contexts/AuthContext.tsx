@@ -1,3 +1,4 @@
+import { AuthAPI } from '@/services/authApi';
 import type {
   AuthContextType,
   SignInData,
@@ -83,65 +84,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       console.log('Attempting to sign in with:', { email: data.identifier });
       
-      // Make API call to your backend
-      const response = await fetch(`${API_BASE_URL}/auth/loginmobile`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: data.identifier, 
-          password: data.password
-        }),
+      // Use AuthAPI service
+      const result = await AuthAPI.signIn({
+        email: data.identifier,
+        password: data.password,
       });
 
-      console.log('Response status:', response.status);
-      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+      console.log('Sign in successful, saving auth data...');
       
-      // Read the response body once and handle both success and error cases
-      let result;
-      try {
-        result = await response.json();
-      } catch (parseError) {
-        console.error('Failed to parse sign in response as JSON:', parseError);
-        return { 
-          status: 'error', 
-          error: 'Invalid response from server' 
-        };
-      }
+      // Use the SignInResponse structure
+      const signInData = result.data;
+      await saveAuthData(signInData.token, signInData.user);
+      return { status: 'complete' };
 
-      console.log('Sign in response:', result);
-
-      if (!response.ok) {
-        console.error('Response not OK:', response.status, result);
-        const errorMessage = result?.message?.text ||  result?.message ||  result?.error || 'Server error. Please try again.';
-        return { 
-          status: 'error', 
-          error: `Server error (${response.status}): ${errorMessage}` 
-        };
-      }
-
-      if (result.success && result.data?.token_data?.access_token && result.data?.user) {
-        console.log('Sign in successful, saving auth data...');
-        await saveAuthData(result.data.token_data.access_token, result.data.user);
-        return { status: 'complete' };
-      } else {
-        console.error('Sign in failed - invalid response structure:', result);
-        return { 
-          status: 'error', 
-          error: result.message || result.error || 'Invalid response from server' 
-        };
-      }
     } catch (error) {
       console.error('Sign in error:', error);
-      
-      if (error instanceof TypeError && error.message.includes('fetch')) {
-        return { 
-          status: 'error', 
-          error: 'Network error. Please check your connection and try again.' 
-        };
-      }
-      
       return { 
         status: 'error', 
         error: error instanceof Error ? error.message : 'An unexpected error occurred' 
@@ -151,66 +108,40 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const signUp = async (data: SignUpData): Promise<{ status: 'complete' | 'needs_verification' | 'error'; error?: string }> => {
     try {
-      // Mock API call - replace with your actual backend
-      // For demo purposes, we'll simulate a successful registration
-      const mockUser: User = {
-        id: 'user_' + Date.now(),
+      // Use AuthAPI service
+      const result = await AuthAPI.register({
+        name: `${data.firstName || ''} ${data.lastName || ''}`.trim() || data.username || data.email.split('@')[0],
         email: data.email,
-        firstName: data.firstName || '',
-        lastName: data.lastName || '',
-        username: data.username || data.email.split('@')[0],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        metadata: {}
-      };
-
-      const mockToken = 'mock_jwt_token_' + Date.now();
-      await saveAuthData(mockToken, mockUser);
-
-      return { status: 'needs_verification' };
-
-      // In a real app, make an API call to your backend:
-      /*
-      const response = await fetch(`${API_BASE_URL}/auth/signup`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
+        password: data.password,
+        country: data.country || 'Unknown', // You may want to add country field to SignUpData type
       });
 
-      const result = await response.json();
-
-      if (response.ok) {
-        if (result.needsVerification) {
-          return { status: 'needs_verification' };
-        } else {
-          await saveAuthData(result.token, result.user);
-          return { status: 'complete' };
-        }
+      console.log('Sign up successful');
+      
+      // Check if email verification is required
+      if (result.data.verification_sent) {
+        // Don't save auth data yet - user needs to verify email first
+        return { status: 'needs_verification' };
       } else {
-        return { status: 'error', error: result.message || 'Sign up failed' };
+        // Auto sign in after successful registration
+        await saveAuthData(result.data.token, result.data.user);
+        return { status: 'complete' };
       }
-      */
     } catch (error) {
       console.error('Sign up error:', error);
-      return { status: 'error', error: 'Network error. Please try again.' };
+      return { 
+        status: 'error', 
+        error: error instanceof Error ? error.message : 'Sign up failed. Please try again.' 
+      };
     }
   };
 
   const signOut = async (): Promise<void> => {
     try {
-      // In a real app, you might want to call your backend to invalidate the token
-      /*
+      // Call backend to invalidate token if available
       if (token) {
-        await fetch(`${API_BASE_URL}/auth/signout`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        });
+        await AuthAPI.signOut(token);
       }
-      */
 
       await clearAuthData();
     } catch (error) {

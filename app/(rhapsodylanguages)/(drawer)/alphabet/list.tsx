@@ -37,7 +37,7 @@ export default function LanguagesByAlphabetScreenSample() {
     };
 
     useEffect(() => {
-        loadData();
+       
     }, []);
 
     const onRefresh = async () => {

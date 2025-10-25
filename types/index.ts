@@ -27,7 +27,7 @@ export interface SubscriptionDetails {
   package_id: string;
   start: string;
   end: string;
-  status: string;
+  status: 'active' | 'free trial' | 'cancelled' | 'expired' | 'past_due';
   package?: Package;
   next_payment_date?: string;
   trial_end?: string;
@@ -47,12 +47,19 @@ export interface SignInData {
   password: string;
 }
 
+export interface SignInResponse {
+  user: User;
+  token: string;
+  expires_in: number;
+}
+
 export interface SignUpData {
   email: string;
   password: string;
   firstName?: string;
   lastName?: string;
   username?: string;
+  country?: string;
 }
 
 export interface AuthContextType extends AuthState {
@@ -108,6 +115,17 @@ export interface PaymentIntentResponse {
   customer: string;
 }
 
+export interface FreeTrialRequest {
+  packageId: string;
+  priceId: string;
+  amount: number;
+  currency: string;
+  userId: string;
+  language: string;
+  method: string;
+  type: 'free trial';
+}
+
 export interface Language {
   id: string;
   code: string;
@@ -150,6 +168,7 @@ export interface RhapsodyLanguage {
   value: string;
   read: string;
   listen: string;
+  watch: string;
   type?: 'open' | 'subscription';
   pivot: {
     country_id: number;
