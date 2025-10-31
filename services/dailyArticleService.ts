@@ -11,11 +11,19 @@ export interface ArticleInfo {
   isValidDay: boolean;
 }
 
+export interface DailyPreview {
+  title: string;
+  date: string;
+  excerpt: string;
+  hasAccess: boolean;
+}
+
 export interface DailyArticleService {
   getCurrentDayArticle: () => ArticleInfo;
   getArticleForDay: (day: number) => ArticleInfo;
   getDaysInCurrentMonth: () => number;
   isValidDayForCurrentMonth: (day: number) => boolean;
+  getDailyPreview: () => Promise<DailyPreview>;
 }
 
 /**
@@ -82,11 +90,62 @@ export const useDailyArticleService = (): DailyArticleService => {
     return day >= 1 && day <= daysInMonth;
   };
 
+  /**
+   * Extract daily preview content with enhanced PDF information
+   * In a real implementation, this would parse PDF content
+   */
+  const getDailyPreview = async (): Promise<DailyPreview> => {
+    const today = new Date();
+    const currentDay = today.getDate();
+    const monthNames = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    
+    // Generate preview content based on current date
+    const currentMonth = monthNames[today.getMonth()];
+    const year = today.getFullYear();
+    
+    // Enhanced topics with seasonal variations
+    const dailyTopics = [
+      'Faith and Trust', 'Divine Guidance', 'Inner Peace', 'Gratitude', 'Compassion',
+      'Hope and Renewal', 'Wisdom and Understanding', 'Love and Service', 'Forgiveness', 'Joy and Celebration',
+      'Perseverance', 'Humility', 'Courage', 'Patience', 'Sacred Understanding',
+      'Kindness', 'Spiritual Strength', 'Quiet Reflection', 'Divine Purpose', 'Amazing Grace',
+      'Infinite Mercy', 'Eternal Truth', 'Divine Light', 'Healing Waters', 'Sacred Unity',
+      'Sacred Prayer', 'Divine Blessing', 'Heart Devotion', 'Holy Surrender', 'Soul Transformation'
+    ];
+    
+    const topicIndex = (currentDay - 1) % dailyTopics.length;
+    const topic = dailyTopics[topicIndex];
+    
+    // Enhanced excerpts with more spiritual depth
+    const excerpts = [
+      `Today we reflect on ${topic.toLowerCase()} and its profound impact on our spiritual journey. As we open our hearts to divine wisdom, we discover new depths of understanding that illuminate our path forward. This sacred time invites us to pause, breathe deeply, and connect with the eternal truths that guide our souls toward greater love and deeper communion with the Divine.`,
+      
+      `In this moment of quiet contemplation, we explore the theme of ${topic.toLowerCase()} and how it shapes our relationship with the divine. Through prayer and meditation, we find ourselves drawn closer to the source of all love and light, discovering peace that transcends understanding and wisdom that surpasses human knowledge. Let us open our hearts to receive these blessings.`,
+      
+      `The beauty of ${topic.toLowerCase()} unfolds before us like a gentle sunrise, revealing layers of meaning that speak to our deepest longing for connection and purpose. As we journey through this day, may we carry these insights with us, allowing them to transform our hearts and minds, bringing us into deeper alignment with divine love and eternal truth.`,
+      
+      `Today's reflection centers on ${topic.toLowerCase()}, offering us a sacred opportunity to deepen our understanding of divine love and our place within the greater tapestry of creation. Through contemplation and prayer, we open ourselves to receive the blessings that await, finding strength in surrender and wisdom in silence.`
+    ];
+    
+    const excerptIndex = Math.floor(currentDay / 8) % excerpts.length;
+    
+    return {
+      title: `Day ${currentDay}: ${topic}`,
+      date: `${currentMonth} ${currentDay}, ${year}`,
+      excerpt: excerpts[excerptIndex],
+      hasAccess: false, // Will be overridden by component based on actual subscription
+    };
+  };
+
   return {
     getCurrentDayArticle,
     getArticleForDay,
     getDaysInCurrentMonth,
-    isValidDayForCurrentMonth
+    isValidDayForCurrentMonth,
+    getDailyPreview
   };
 };
 
@@ -214,3 +273,4 @@ export const usePdfReaderState = (initialDay?: number) => {
 
 // Import React for useState
 import React from 'react';
+

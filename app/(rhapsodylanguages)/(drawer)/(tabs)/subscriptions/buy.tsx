@@ -3,6 +3,7 @@ import PaymentSuccess from '@/components/subscriptions/PaymentSuccess';
 import { useAuth, useSubscription } from '@/contexts';
 import { useThemeColors } from '@/hooks/use-themed-styles';
 import { PaymentApi } from '@/services/paymentApi';
+import { getUserFullName } from '@/utils/userUtils';
 import { Ionicons } from '@expo/vector-icons';
 import { useStripe } from '@stripe/stripe-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -68,8 +69,8 @@ export default function BuyAdditionalLanguageScreen() {
         // 1. Create payment intent on backend
         const paymentIntentData = await PaymentApi.fetchPaymentIntent(
             {
-            userId: user.id,
-            packageId: subscriptionDetails?.package_id || '',
+            userId: String(user.id), // Convert number to string
+            packageId: String(subscriptionDetails?.package_id || ''), // Convert number to string
             priceId: subscriptionDetails?.package?.stripe_price || '',
             amount: Math.round(additionalLanguagePrice),
             currency: 'usd',
@@ -161,8 +162,8 @@ export default function BuyAdditionalLanguageScreen() {
   
         const { clientSecret, ephemeralKey, customer } = await PaymentApi.buyAdditionalLanguage(
             {
-                userId: user.id,
-                packageId: subscriptionDetails?.package_id || '',
+                userId: String(user.id), // Convert number to string
+                packageId: String(subscriptionDetails?.package_id || ''), // Convert number to string
                 priceId: subscriptionDetails?.package?.stripe_price || '',
                 amount: Math.round(additionalLanguagePrice),
                 currency: 'usd',
@@ -200,7 +201,7 @@ export default function BuyAdditionalLanguageScreen() {
           customerId: customer,
           clientSecretPrefix: clientSecret.substring(0, 20),
           userEmail: user.email,
-          userName: `${user.name}`
+          userName: getUserFullName(user)
         });
   
         const { error: initError } = await initPaymentSheet({
@@ -211,7 +212,7 @@ export default function BuyAdditionalLanguageScreen() {
           allowsDelayedPaymentMethods: false,
           defaultBillingDetails: {
             email: user.email,
-            name: `${user.name}`,
+            name: getUserFullName(user),
           },
           appearance: {
             colors: {

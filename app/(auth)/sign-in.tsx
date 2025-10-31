@@ -1,15 +1,18 @@
 import { createAuthStyles } from '@/assets/styles/auth.themed.styles';
-import { useSignIn } from '@/contexts';
+import CustomNotification from '@/components/ui/CustomNotification';
+import { useAuth } from '@/contexts/AuthContext';
+import useCustomNotification from '@/hooks/use-custom-notification';
 import { useThemeColors, useThemedStyles } from '@/hooks/use-themed-styles';
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from "expo-image";
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 export default function SignInScreen() {
-  const { signIn, setActive, isLoaded } = useSignIn()
+  const { signIn } = useAuth();
   const router = useRouter()
+  const { notification, showError, hideNotification } = useCustomNotification();
 
   const [emailAddress, setEmailAddress] = useState('')
   const [password, setPassword] = useState('')
@@ -23,37 +26,52 @@ export default function SignInScreen() {
   // Handle the submission of the sign-in form
   const handleSignIn = async () => {
     if (!emailAddress || !password) {
-      Alert.alert("Error", "Please fill in all fields");
+      showError("Error", "Please fill in all fields");
       return;
     }
 
-    if (!isLoaded) return;
-
     setLoading(true);
 
-    // Start the sign-in process using the email and password provided
     try {
-      const signInAttempt = await signIn.create({
-        identifier: emailAddress,
-        password,
-      })
+      console.log('[SignIn] Attempting sign in...');
+      
+      const result = await signIn({
+        email: emailAddress,
+        password: password,
+      });
 
-      // If sign-in process is complete, set the created session as active
-      // and redirect the user
-      if (signInAttempt.status === 'complete') {
-        await setActive({ session: signInAttempt.createdSessionId });
+      console.log('[SignIn] Sign in result:', result.status);
 
-      } else {
-        // If the status isn't complete, check why. User might need to
-        // complete further steps.
-        Alert.alert("Error", "Sign in failed. Please try again.");
-        console.error(JSON.stringify(signInAttempt, null, 2))
+      if (result.status === 'complete') {
+        console.log('[SignIn] Sign in successful');
+        // Navigate to the main app - the AuthContext will handle the user state
+        router.replace('/(rhapsodylanguages)/(drawer)/(tabs)/daily/' as any);
+      } else if (result.status === 'error') {
+        const errorMessage = result.error || 'Sign in failed. Please try again.';
+        console.error('[SignIn] Sign in failed:', errorMessage);
+        
+        // Check if this is an email verification error
+        if (errorMessage.includes('verify your email') || errorMessage.includes('verification')) {
+          console.log('[SignIn] Email verification required, redirecting to verify-email...');
+          
+          // Navigate to verification page with the email
+          // Note: AuthAPI has already auto-resent the verification code
+          router.push({
+            pathname: '/(auth)/verify-email',
+            params: { 
+              email: emailAddress,
+              autoResent: 'true' // Indicate that verification code was automatically resent
+            }
+          });
+        } else {
+          showError("Sign In Failed", errorMessage);
+        }
       }
     } catch (err: any) {
-      // See https://clerk.com/docs/guides/development/custom-flows/error-handling
-      // for more info on error handling
-      Alert.alert("Error", err.errors?.[0]?.message || "Sign in failed");
-      console.error(JSON.stringify(err, null, 2))
+      // Handle any unexpected errors
+      const errorMessage = err.message || "An unexpected error occurred";
+      console.error('[SignIn] Unexpected error:', err);
+      showError("Error", errorMessage);
     } finally {
       setLoading(false);
     }
@@ -64,11 +82,12 @@ export default function SignInScreen() {
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={authStyles.keyboardView}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
       >
         <ScrollView
-          contentContainerStyle={authStyles.scrollContent}
+          contentContainerStyle={[authStyles.scrollContent, { paddingBottom: 50 }]}
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
         >
           <View style={authStyles.imageContainer}>
             <Image
@@ -109,6 +128,8 @@ export default function SignInScreen() {
               <TouchableOpacity
                 style={authStyles.eyeButton}
                 onPress={() => setShowPassword(!showPassword)}
+                activeOpacity={0.7}
+                delayPressIn={0}
               >
                 <Ionicons
                   name={showPassword ? "eye-outline" : "eye-off"}
@@ -118,11 +139,23 @@ export default function SignInScreen() {
               </TouchableOpacity>
             </View>
 
+            {/* Forgot Password Link */}
+            <TouchableOpacity
+              style={{ alignItems: 'flex-end', marginBottom: 20 }}
+              onPress={() => router.push("/(auth)/forgot-password")}
+              activeOpacity={0.7}
+            >
+              <Text style={[authStyles.link, { fontSize: 14 }]}>
+                Forgot Password?
+              </Text>
+            </TouchableOpacity>
+
             <TouchableOpacity
               style={[authStyles.authButton, loading && authStyles.buttonDisabled]}
               onPress={handleSignIn}
               disabled={loading}
               activeOpacity={0.8}
+              delayPressIn={0}
             >
               <Text style={authStyles.buttonText}>{loading ? "Signing In..." : "Sign In"}</Text>
             </TouchableOpacity>
@@ -131,6 +164,8 @@ export default function SignInScreen() {
             <TouchableOpacity
               style={authStyles.linkContainer}
               onPress={() => router.push("/(auth)/sign-up")}
+              activeOpacity={0.7}
+              delayPressIn={0}
             >
               <Text style={authStyles.linkText}>
                 Don&apos;t have an account? <Text style={authStyles.link}>Sign up</Text>
@@ -139,6 +174,14 @@ export default function SignInScreen() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+      
+      <CustomNotification
+        visible={notification.visible}
+        type={notification.type}
+        title={notification.title}
+        message={notification.message}
+        onClose={hideNotification}
+      />
     </View>
   )
 }

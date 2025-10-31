@@ -1,6 +1,6 @@
 // Payment API Service for handling Stripe payment operations
 
-import type { ApiResponse, FreeTrialRequest, Language, PaymentHistoryResponse, PaymentIntentRequest, PaymentIntentResponse, SubscriptionDetails } from '@/types';
+import type { ApiResponse, Language, PaymentHistoryResponse, PaymentIntentRequest, PaymentIntentResponse, SubscriptionDetails } from '@/types';
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || 'https://mediathek.tniglobal.org/api';
 
@@ -212,59 +212,61 @@ export const PaymentApi = {
 
   /**
    * Start free trial for user
-   * @param data Free trial request data
+   * @param data Free trial request data (not used - endpoint only needs auth token)
    * @param token Authentication token
    * @returns Free trial response
    */
-  startFreeTrial: async (data: FreeTrialRequest, token: string | null): Promise<ApiResponse<SubscriptionDetails>> => {
+  activateFreeTrial: async (token: string | null): Promise<ApiResponse<SubscriptionDetails>> => {
     try {
-      console.log('Activating free trial with request:', data);
-      console.log('API URL:', `${API_BASE_URL}/subscription_payments`);
-      console.log('Token present:', !!token);
+      console.log('[PaymentApi] Activating free trial...');
+      console.log('[PaymentApi] API URL:', `${API_BASE_URL}/subscription/activate-free-trial`);
+      console.log('[PaymentApi] Token present:', !!token);
 
-      const response = await fetch(`${API_BASE_URL}/subscription_payments`, {
+      // According to SUBSCRIPTION_SYSTEM_GUIDE.md, this endpoint only needs Authorization header
+      // No request body is required
+      const response = await fetch(`${API_BASE_URL}/subscription/activate-free-trial`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+          'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify(data),
       });
 
-      console.log('Free trial request Status:', response.status, response.statusText);
+      console.log('[PaymentApi] Response status:', response.status, response.statusText);
 
       // Read the response body once and handle both success and error cases
       let jsonData;
       try {
-
         jsonData = await response.json();
-        
       } catch (parseError) {
-
-        console.error('Failed to parse payment intent response as JSON:', parseError);
-        throw new Error('Invalid JSON response from payment service');
+        console.error('[PaymentApi] Failed to parse response as JSON:', parseError);
+        throw new Error('Invalid JSON response from server');
       }
 
-      console.log('Free Trial Response:', jsonData);
+      console.log('[PaymentApi] Response data:', jsonData);
 
       if (!response.ok) {
-        console.error('Free Trial Error Response:', jsonData);
+        console.error('[PaymentApi] Error response:', jsonData);
 
-        const errorMessage = jsonData?.message?.text || 
-                            jsonData?.message || 
+        const errorMessage = jsonData?.message || 
                             jsonData?.error || 
                             `HTTP ${response.status}: ${response.statusText}`;
         
         throw new Error(errorMessage);
       }
 
-      console.log('Free Trial Response Parsed Response:', jsonData);
-      console.log('Free trial validation successful');
-      return jsonData.data;
+      console.log('[PaymentApi] Free trial activation successful');
+      
+      // Return the full response object including success flag and message
+      return {
+        success: jsonData.success || true,
+        message: jsonData.message || 'Free trial activated successfully',
+        data: jsonData.data
+      };
 
 
     } catch (error) {
-      console.error('Free Trial Error:', error);
+      console.error('[PaymentApi] Free trial error:', error);
       throw error;
     }
   },

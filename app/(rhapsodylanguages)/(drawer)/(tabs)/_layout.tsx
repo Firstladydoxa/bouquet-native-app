@@ -50,12 +50,33 @@ export default function RhapsodyLanguagesTabLayout() {
       />
 
       <Tabs.Screen
+        name="daily/index"
+        options={{
+          title: 'Daily',
+          tabBarLabel: 'Daily',
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon 
+              name={focused ? 'book-outline' : 'book'} 
+              color={focused ? colors.secondary : colors.secondary}
+            />
+          ),
+        }}
+      />
+
+      <Tabs.Screen
+        name="daily/my-languages"
+        options={{
+          href: null, // This hides the route from tabs
+        }}
+      />
+
+      <Tabs.Screen
         name="explore"
         options={{
           title: 'Explore',
           tabBarIcon: ({ color, focused }) => (
             <TabBarIcon 
-              name={focused ? 'book-outline' : 'book'} 
+              name={focused ? 'search-outline' : 'search'} 
               color={focused ? colors.secondary : colors.secondary}
             />
           ),

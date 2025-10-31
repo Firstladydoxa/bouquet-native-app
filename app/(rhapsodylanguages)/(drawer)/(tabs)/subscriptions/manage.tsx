@@ -10,12 +10,12 @@ import * as Sharing from 'expo-sharing';
 import * as WebBrowser from 'expo-web-browser';
 import React, { useState } from 'react';
 import {
-    Alert,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -44,7 +44,7 @@ export default function ManageSubscriptionScreen() {
     switch (status?.toLowerCase()) {
       case 'active':
         return { text: 'ACTIVE', color: design.success, bgColor: design.successBg };
-      case 'free trial':
+      case 'free_trial':
         return { text: 'FREE TRIAL', color: '#FF6B35', bgColor: '#FF6B3515' };
       case 'cancelled':
         return { text: 'CANCELLED', color: '#DC2626', bgColor: '#DC262615' };
@@ -241,7 +241,7 @@ export default function ManageSubscriptionScreen() {
                 </LinearGradient>
                 <View style={styles.featureCardTitleContainer}>
                   <Text style={[styles.featureCardTitle, { color: design.primary, fontFamily: 'BerkshireSwash_400Regular' }]}>
-                    {subscriptionDetails.status === 'free trial' ? 'Free Trial Plan' : 'Active Plan'}
+                    {subscriptionDetails.status === 'free_trial' ? 'Free Trial Plan' : 'Active Plan'}
                   </Text>
                 </View>
               </View>
@@ -259,17 +259,17 @@ export default function ManageSubscriptionScreen() {
               <View style={styles.planHeader}>
                 <View>
                   <Text style={[styles.planName, { color: design.tertiary, fontFamily: 'BerkshireSwash_400Regular' }]}>
-                    {subscriptionDetails.status === 'free trial' 
+                    {subscriptionDetails.status === 'free_trial' 
                       ? 'Free Trial Access' 
                       : (subscriptionDetails.package?.label || 'Premium Plan')
                     }
                   </Text>
                   <View style={styles.planPriceRow}>
                     <Text style={[styles.planPrice, { color: design.primary }]}>
-                      {subscriptionDetails.status === 'free trial' ? 'FREE' : `$${subscriptionDetails.package?.price}`}
+                      {subscriptionDetails.status === 'free_trial' ? 'FREE' : `$${subscriptionDetails.package?.price}`}
                     </Text>
                     <Text style={[styles.planDuration, { color: design.secondary }]}>
-                      {subscriptionDetails.status === 'free trial' 
+                      {subscriptionDetails.status === 'free_trial' 
                         ? 'Until Dec 31, 2025'
                         : `/ ${subscriptionDetails.package?.duration || 'month'} days`
                       }

@@ -1,6 +1,6 @@
+import { useAuthActions, useAuthContext, useAuthUser } from '@/contexts';
 import React from 'react';
-import { View, Text, TouchableOpacity, Alert } from 'react-native';
-import { useAuthContext, useAuthUser, useAuthActions } from '@/contexts';
+import { Alert, Text, TouchableOpacity, View } from 'react-native';
 
 /**
  * Example component demonstrating how to use the Auth Context
@@ -8,11 +8,11 @@ import { useAuthContext, useAuthUser, useAuthActions } from '@/contexts';
  */
 export const AuthExampleComponent: React.FC = () => {
   // Method 1: Use the main auth context hook
-  const { user, isLoading, isSignedIn } = useAuthContext();
+  const { user, isLoaded, isSignedIn } = useAuthContext();
   
   // Method 2: Use specific helper hooks
   const { user: authUser } = useAuthUser();
-  const { signOut, updateProfile } = useAuthActions();
+  const { signOut, updateUser } = useAuthActions();
 
   // Handle sign out
   const handleSignOut = async () => {
@@ -29,16 +29,16 @@ export const AuthExampleComponent: React.FC = () => {
   // Handle profile update
   const handleUpdateProfile = async () => {
     try {
-      await updateProfile({
-        firstName: 'Updated',
-        lastName: 'Name'
+      await updateUser({
+        firstname: 'Updated',
+        lastname: 'Name'
       });
     } catch (error) {
       console.error('Failed to update profile:', error);
     }
   };
 
-  if (isLoading) {
+  if (!isLoaded) {
     return (
       <View className="flex-1 justify-center items-center">
         <Text className="text-gray-600">Loading...</Text>
@@ -62,7 +62,7 @@ export const AuthExampleComponent: React.FC = () => {
   return (
     <View className="flex-1 p-6">
       <Text className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-        Welcome, {user?.firstName || 'User'}!
+        Welcome, {user?.firstname || 'User'}!
       </Text>
       
       {/* User Information */}
@@ -74,7 +74,7 @@ export const AuthExampleComponent: React.FC = () => {
           Email: {user?.email}
         </Text>
         <Text className="text-gray-700 dark:text-gray-300 mb-1">
-          Name: {user?.firstName} {user?.lastName}
+          Name: {user?.firstname} {user?.lastname}
         </Text>
         {user?.username && (
           <Text className="text-gray-700 dark:text-gray-300 mb-1">
@@ -83,7 +83,7 @@ export const AuthExampleComponent: React.FC = () => {
         )}
         {user?.subscription && (
           <Text className="text-green-600 dark:text-green-400 mb-1">
-            Subscription: {user.subscription}
+            Subscription: {user.subscription.status} ({user.subscription.category})
           </Text>
         )}
       </View>

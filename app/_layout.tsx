@@ -10,6 +10,7 @@ import 'react-native-reanimated';
 
 import { AppTour } from '@/components/ui/AppTour';
 import { ThemeColorWidget } from '@/components/ui/ThemeColorWidget';
+import TokenRefreshWidget from '@/components/ui/TokenRefreshWidget';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
@@ -53,6 +54,8 @@ export default function RootLayout() {
                 </View>
                 {/* App Tour - First time user guide */}
                 <AppTour />
+                {/* Token Refresh Widget - Session management */}
+                <TokenRefreshWidget />
               </View>
             </NavigationThemeProvider>
           </AuthProvider>

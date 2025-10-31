@@ -4,7 +4,10 @@ import type { PaymentHistoryResponse, SubscriptionDetails } from '@/types';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
 interface SubscriptionContextType {
-  hasSubscription: boolean;
+  hasSubscription: boolean; // True for paid subscriptions (standard, basic, premium)
+  hasPaidSubscription: boolean; // Alias for hasSubscription for clarity
+  hasAccess: boolean; // True for any active subscription (including free)
+  hasFreeTrialActive: boolean; // True if user has active free trial
   subscriptionDetails: SubscriptionDetails | null;
   paymentHistory: PaymentHistoryResponse | null;
   loading: boolean;
@@ -16,6 +19,7 @@ interface SubscriptionContextType {
 const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined);
 
 export const useSubscription = () => {
+
   const context = useContext(SubscriptionContext);
   if (context === undefined) {
     throw new Error('useSubscription must be used within a SubscriptionProvider');
@@ -31,7 +35,9 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
   const { user, isLoaded: userLoaded } = useUser();
   const { getToken } = useAuth();
   
-  const [hasSubscription, setHasSubscription] = useState(false);
+  const [hasSubscription, setHasSubscription] = useState(false); // Paid subscriptions only
+  const [hasAccess, setHasAccess] = useState(false); // Any active subscription including free
+  const [hasFreeTrialActive, setHasFreeTrialActive] = useState(false); // Active free trial
   const [subscriptionDetails, setSubscriptionDetails] = useState<SubscriptionDetails | null>(null);
   const [paymentHistory, setPaymentHistory] = useState<PaymentHistoryResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -49,16 +55,38 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
       return;
     }
 
-    // Check if user has subscription object and it's active
+    // Check if user has subscription object and what category it is
+    // Free subscriptions (category: 'free') are considered free access
+    // Paid subscriptions (category: 'standard', 'basic', 'premium') are considered paid plans
     const userHasSubscription = !!(
+      user.subscription && 
+      typeof user.subscription === 'object' && 
+      user.subscription.status === 'active' &&
+      ['standard', 'basic', 'premium'].includes(user.subscription.category)
+    );
+    
+    // User always has access (either free or paid subscription)
+    // Free users have category 'free', paid users have 'standard', 'basic', or 'premium'
+    const userHasAccess = !!(
       user.subscription && 
       typeof user.subscription === 'object' && 
       user.subscription.status === 'active'
     );
-    setHasSubscription(userHasSubscription);
     
-    // If user has subscription object, use it directly
-    if (userHasSubscription && user.subscription) {
+    // Check if user has active free trial
+    const userHasFreeTrialActive = !!(
+      user.subscription &&
+      typeof user.subscription === 'object' &&
+      (user.subscription.status === 'free_trial' || user.subscription.category === 'free_trial') &&
+      user.subscription.status === 'active'
+    );
+    
+    setHasSubscription(userHasSubscription);
+    setHasAccess(userHasAccess);
+    setHasFreeTrialActive(userHasFreeTrialActive);
+    
+    // If user has subscription object, use it directly (regardless of category)
+    if (userHasAccess && user.subscription) {
       setSubscriptionDetails(user.subscription);
     } else {
       setSubscriptionDetails(null);
@@ -67,7 +95,9 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
     console.log('Subscription status check:', {
       userId: user.id,
       subscription: user.subscription,
-      hasSubscription: userHasSubscription
+      category: user.subscription?.category,
+      hasSubscription: userHasSubscription,
+      hasAccess: userHasAccess
     });
   };
 
@@ -99,7 +129,7 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
       const token = await getToken();
       console.log('Token obtained:', !!token);
       
-      const history = await PaymentApi.fetchPaymentHistory({ user_id: user.id }, token);
+      const history = await PaymentApi.fetchPaymentHistory({ user_id: String(user.id) }, token); // Convert number to string
       console.log('Payment history fetched:', history);
       setPaymentHistory(history);
 
@@ -181,6 +211,9 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
 
   const value: SubscriptionContextType = {
     hasSubscription,
+    hasPaidSubscription: hasSubscription, // Alias for clarity
+    hasAccess,
+    hasFreeTrialActive,
     subscriptionDetails,
     paymentHistory,
     loading,

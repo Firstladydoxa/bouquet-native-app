@@ -1,99 +1,141 @@
 import { SignOutButton } from "@/components/auth/SignOutButton";
-import { SubscriptionProvider } from "@/contexts";
+import { SubscriptionProvider, useAuth } from "@/contexts";
 import { useThemeColors } from "@/hooks/use-themed-styles";
 import { Ionicons } from "@expo/vector-icons";
 import { DrawerContentScrollView, DrawerItem } from "@react-navigation/drawer";
 import { router, usePathname } from "expo-router";
 import { Drawer } from "expo-router/drawer";
 import React, { useEffect } from "react";
-import { Image, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
 
 const CustomDrawerContent = (props: any) => {
   const pathname = usePathname();
   const colors = useThemeColors();
+  const { user } = useAuth();
 
   useEffect(() => {
     console.log(pathname);
   }, [pathname]);
+
+  // Get user initials
+  const getInitials = () => {
+    if (!user) return "U";
+    const firstInitial = user.firstname?.charAt(0)?.toUpperCase() || "";
+    const lastInitial = user.lastname?.charAt(0)?.toUpperCase() || "";
+    return `${firstInitial}${lastInitial}` || "U";
+  };
+
+  const getUserName = () => {
+    if (!user) return "Guest";
+    return `${user.firstname || ""} ${user.lastname || ""}`.trim() || "User";
+  };
+
+  const getUserEmail = () => {
+    return user?.email || "guest@email.com";
+  };
+
+  const isRouteActive = (routePath: string) => {
+    return pathname.includes(routePath);
+  };
 
   const styles = StyleSheet.create({
     drawerStyle: {
       backgroundColor: colors.background,
     },
     navItem: {
-      marginVertical: 8,
-      marginHorizontal: 5
+      marginVertical: 4,
+      marginHorizontal: 8,
+      borderRadius: 8,
+    },
+    navItemActive: {
+      backgroundColor: colors.primary + '15',
     },
     navItemLabel: {
       marginLeft: 5,
       fontSize: 16,
+      fontWeight: '500',
     },
     userInfoWrapper: {
       backgroundColor: colors.primary,
       flexDirection: "row",
-      paddingHorizontal: 10,
-      paddingVertical: 20,
-      borderBottomColor: colors.border,
-      borderBottomWidth: 1,
-      marginBottom: 10,
+      paddingHorizontal: 16,
+      paddingTop: 50,
+      paddingBottom: 20,
+      marginBottom: 8,
     },
-    userImg: {
-      borderRadius: 40,
+    avatarContainer: {
+      width: 70,
+      height: 70,
+      borderRadius: 35,
+      backgroundColor: colors.white,
+      justifyContent: "center",
+      alignItems: "center",
+      borderWidth: 3,
+      borderColor: colors.white + '40',
+    },
+    avatarText: {
+      fontSize: 28,
+      fontWeight: 'bold',
+      color: colors.primary,
     },
     userDetailsWrapper: {
-      marginTop: 25,
-      marginLeft: 10,
+      marginLeft: 16,
+      justifyContent: "center",
+      flex: 1,
     },
     userName: {
-      fontSize: 16,
+      fontSize: 18,
       fontWeight: 'bold',
       color: colors.white,
+      marginBottom: 4,
     },
     userEmail: {
-      fontSize: 16,
-      fontStyle: 'italic',
-      textDecorationLine: 'underline',
-      color: colors.white,
+      fontSize: 14,
+      color: colors.white + 'CC',
     },
     drawerContentContainer: {
       flex: 1,
+    },
+    scrollViewContent: {
+      paddingTop: 0,
     }
   });
 
   return (
     <View style={styles.drawerContentContainer}>
-      <DrawerContentScrollView {...props} style={styles.drawerStyle}>
-
-        <View style={styles.userInfoWrapper}>
-          <Image
-            source={{ uri: "https://randomuser.me/api/portraits/women/26.jpg" }}
-            width={80}
-            height={80}
-            style={styles.userImg}
-          />
-          <View style={styles.userDetailsWrapper}>
-            <Text style={styles.userName}>John Doe</Text>
-            <Text style={styles.userEmail}>john@email.com</Text>
-          </View>
+      {/** User Info Section - At the very top */}
+      <View style={styles.userInfoWrapper}>
+        <View style={styles.avatarContainer}>
+          <Text style={styles.avatarText}>{getInitials()}</Text>
         </View>
+        <View style={styles.userDetailsWrapper}>
+          <Text style={styles.userName}>{getUserName()}</Text>
+          <Text style={styles.userEmail}>{getUserEmail()}</Text>
+        </View>
+      </View>
+
+      <DrawerContentScrollView {...props} style={styles.drawerStyle} contentContainerStyle={styles.scrollViewContent}>
 
       <DrawerItem
         icon={({ color, size }) => (
           <Ionicons
             name="home"
             size={30}
-            color={colors.secondary}
+            color={isRouteActive('/(tabs)') && !isRouteActive('/subscriptions') && !isRouteActive('/daily') ? colors.primary : colors.secondary}
           />
         )}
         label={"Home"}
         labelStyle={[
           styles.navItemLabel,
-          { color: colors.text },
+          { 
+            color: isRouteActive('/(tabs)') && !isRouteActive('/subscriptions') && !isRouteActive('/daily') ? colors.secondary : colors.text,
+            fontWeight: isRouteActive('/(tabs)') && !isRouteActive('/subscriptions') && !isRouteActive('/daily') ? '600' : '500'
+          },
         ]}
         style={[
           styles.navItem,
-          
+          isRouteActive('/(tabs)') && !isRouteActive('/subscriptions') && !isRouteActive('/daily') && styles.navItemActive
         ]}
         onPress={() => {
           router.push("/(rhapsodylanguages)/(drawer)/(tabs)");
@@ -105,16 +147,20 @@ const CustomDrawerContent = (props: any) => {
           <Ionicons
             name="person-circle"
             size={30}
-            color={colors.secondary}
+            color={isRouteActive('/subscriptions') ? colors.primary : colors.secondary}
           />
         )}
         label={"Subscriptions"}
         labelStyle={[
           styles.navItemLabel,
-          { color: colors.text },
+          { 
+            color: isRouteActive('/subscriptions') ? colors.secondary : colors.text,
+            fontWeight: isRouteActive('/subscriptions') ? '600' : '500'
+          },
         ]}
         style={[
-          styles.navItem,   
+          styles.navItem,
+          isRouteActive('/subscriptions') && styles.navItemActive
         ]}
         onPress={() => {
           router.push("/(rhapsodylanguages)/(drawer)/(tabs)/subscriptions");
@@ -127,15 +173,21 @@ const CustomDrawerContent = (props: any) => {
           <Ionicons
             name="flag"
             size={30}
-            color={colors.secondary}
+            color={isRouteActive('/alphabet') ? colors.primary : colors.secondary}
           />
         )}
         label={"Languages by alphabet"}
         labelStyle={[
           styles.navItemLabel,
-          { color: colors.text },
+          { 
+            color: isRouteActive('/alphabet') ? colors.secondary : colors.text,
+            fontWeight: isRouteActive('/alphabet') ? '600' : '500'
+          },
         ]}
-        style={[styles.navItem,]}
+        style={[
+          styles.navItem,
+          isRouteActive('/alphabet') && styles.navItemActive
+        ]}
         onPress={() => {
           router.push("/(rhapsodylanguages)/(drawer)/alphabet");
         }}
@@ -147,20 +199,26 @@ const CustomDrawerContent = (props: any) => {
           <Ionicons
             name="book"
             size={30}
-            color={colors.secondary || colors.primary}
+            color={isRouteActive('/regions') ? colors.primary : colors.secondary}
           />
         )}
         
         labelStyle={[
           styles.navItemLabel,
-          { color: colors.text},
+          { 
+            color: isRouteActive('/regions') ? colors.secondary : colors.text,
+            fontWeight: isRouteActive('/regions') ? '600' : '500'
+          },
         ]}
-        style={[ styles.navItem,]}
+        style={[
+          styles.navItem,
+          isRouteActive('/regions') && styles.navItemActive
+        ]}
         onPress={() => {
           router.push("/regions/list");
         }}
       />
-      
+
       </DrawerContentScrollView>
     </View>
   );

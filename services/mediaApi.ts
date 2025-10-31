@@ -279,4 +279,48 @@ export class MediaAPI {
             throw error;
         }
     }
+
+    /**
+     * Fetch available Rhapsody languages for daily reading
+     * @returns Promise<DailyRhapsodyLanguage[]> - Array of available languages with their PDF file names
+     */
+    static async fetchRhapsodyLanguages(): Promise<import('@/types').DailyRhapsodyLanguage[]> {
+        try {
+            console.log('Fetching Rhapsody languages from:', `${RHAPSODYLANGUAGES_API}/readRhapsodyDaily`);
+
+            const response = await fetch(`${RHAPSODYLANGUAGES_API}/readRhapsodyDaily`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                },
+            });
+
+            console.log('Rhapsody Languages Response Status:', response.status, response.statusText);
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+                console.error('Rhapsody Languages Fetch Error Data:', errorData);
+                throw new Error(errorData.message || 'Failed to fetch Rhapsody languages');
+            }
+
+            const jsonData = await response.json();
+            console.log('Rhapsody languages fetched successfully:', jsonData.data?.length || 0, 'languages');
+            
+            return jsonData.data as import('@/types').DailyRhapsodyLanguage[];
+        } catch (error: any) {
+            console.error('Fetch Rhapsody Languages Error Details:', {
+                message: error.message,
+                name: error.name,
+                stack: error.stack,
+            });
+            
+            // Provide more specific error messages
+            if (error.message === 'Network request failed') {
+                throw new Error('Unable to connect to the server. Please check your internet connection.');
+            }
+            
+            throw error;
+        }
+    }
 }

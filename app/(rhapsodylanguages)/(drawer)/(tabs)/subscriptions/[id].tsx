@@ -4,6 +4,7 @@ import { useThemeColors } from '@/hooks/use-themed-styles';
 import { PaymentApi } from '@/services/paymentApi';
 import { RhapsodyLanguagesAPI } from '@/services/rhapsodylanguagesApi';
 import type { Language, Package } from '@/types';
+import { getUserFullName } from '@/utils/userUtils';
 import { Feather, Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useStripe } from '@stripe/stripe-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -92,7 +93,7 @@ export default function PaymentScreen() {
 
       const { clientSecret, ephemeralKey, customer } = await PaymentApi.fetchPaymentIntent(
         {
-            userId: user.id,
+            userId: String(user.id), // Convert number to string
             language: selectedLanguage.label,
             packageId: selectedPackage.id,
             amount: selectedPackage.price, // Stripe expects amount in cents
@@ -131,7 +132,7 @@ export default function PaymentScreen() {
         customerId: customer,
         clientSecretPrefix: clientSecret.substring(0, 20),
         userEmail: user.email,
-        userName: `${user.name}`
+        userName: getUserFullName(user)
       });
 
       const { error: initError } = await initPaymentSheet({
@@ -142,7 +143,7 @@ export default function PaymentScreen() {
         allowsDelayedPaymentMethods: false,
         defaultBillingDetails: {
           email: user.email,
-          name: `${user.name}`,
+          name: getUserFullName(user),
         },
         appearance: {
           colors: {

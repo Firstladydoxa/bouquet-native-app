@@ -1,5 +1,7 @@
+import { SubscriptionGuard } from '@/components/subscriptions/SubscriptionGuard';
 import CustomLoader from '@/components/ui/CustomLoader';
 import type { ThemeColors } from '@/constants/colors';
+import { useSubscriptionAccess } from '@/hooks/use-subscription-access';
 import { useThemeColors } from '@/hooks/use-themed-styles';
 import { RhapsodyLanguagesAPI } from '@/services/rhapsodylanguagesApi';
 import type { Region } from '@/types';
@@ -11,12 +13,12 @@ import { FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } fr
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 
-const PlaceholderImage = require('@/assets/images/react-logo.png');
+const PlaceholderImage = require('@/assets/images/icon.png');
 const mediathekURL = 'https://mediathek.tniglobal.org';
 
 export default function LanguagesByRegionScreen() {
-
   const colors = useThemeColors();
+  const { isAuthenticated } = useSubscriptionAccess();
   const [selectedImage, setSelectedImage] = useState('');
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -99,30 +101,32 @@ export default function LanguagesByRegionScreen() {
   if (loading && !refreshing) return <CustomLoader message="Loading regions..." size="large" />;
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Languages by regions and countries</Text>
-        <Text style={styles.headerSubtitle}>
-          Search a language by region:
-        </Text>
-      </View>
-      
-      <FlatList
-        data={regions}
-        keyExtractor={({ id }) => id}
-        renderItem={renderRegionCard}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.listContent}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor={colors.primary}
-            colors={[colors.primary]}
-          />
-        }
-      />
-    </SafeAreaView>
+    <SubscriptionGuard>
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Languages by regions and countries</Text>
+          <Text style={styles.headerSubtitle}>
+            Search a language by region:
+          </Text>
+        </View>
+        
+        <FlatList
+          data={regions}
+          keyExtractor={({ id }) => id}
+          renderItem={renderRegionCard}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.listContent}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={colors.primary}
+              colors={[colors.primary]}
+            />
+          }
+        />
+      </SafeAreaView>
+    </SubscriptionGuard>
   );
 }
 
@@ -139,7 +143,7 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
   headerTitle: {
     fontSize: 24,
     fontFamily: 'BerkshireSwash_400Regular',
-    color: colors.primary,
+    color: colors.tertiary || '#3847d6',
     marginBottom: 8,
     textAlign: 'center',
   },
@@ -210,5 +214,6 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
     fontSize: 14,
     color: colors.textLight,
     lineHeight: 20,
+    fontWeight: '600',
   },
 });

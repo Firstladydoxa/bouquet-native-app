@@ -1,3 +1,6 @@
+import FreeTrialActivatedBadge from '@/components/ui/FreeTrialActivatedBadge';
+import StartFreeTrialButton from '@/components/ui/StartFreeTrialButton';
+import { useSubscription } from '@/contexts/SubscriptionContext';
 import { useThemeColors } from '@/hooks/use-themed-styles';
 import { ContentAccessLevel, getAccessLevelColors, useSubscriptionService } from '@/services/subscriptionService';
 import { RhapsodyLanguage } from '@/types';
@@ -21,9 +24,10 @@ export const LanguageActions: React.FC<LanguageActionsProps> = ({
 }) => {
   const router = useRouter();
   const colors = useThemeColors();
+  const { hasFreeTrialActive } = useSubscription();
   const subscriptionService = useSubscriptionService();
   
-  const access = subscriptionService.checkLanguageAccess(language);
+  const accessResult = subscriptionService.checkLanguageAccess(language);
   const styles = createStyles(colors);
 
   const handleJoinNetwork = async () => {
@@ -50,14 +54,6 @@ export const LanguageActions: React.FC<LanguageActionsProps> = ({
 
   const getAvailableFormats = () => {
     const formats: Array<'read' | 'listen' | 'watch'> = [];
-    console.log(`Checking formats for ${language.label}:`, {
-      read: language.read,
-      listen: language.listen,
-      watch: language.watch,
-      readType: typeof language.read,
-      listenType: typeof language.listen,
-      watchType: typeof language.watch,
-    });
     
     // Check for truthy values - handles '1', 1, true, etc.
     const isEnabled = (val: string | number | boolean | undefined | null) => {
@@ -68,7 +64,6 @@ export const LanguageActions: React.FC<LanguageActionsProps> = ({
     if (isEnabled(language.listen as any)) formats.push('listen');
     if (isEnabled(language.watch as any)) formats.push('watch');
     
-    console.log(`Available formats for ${language.label}:`, formats);
     return formats;
   };
 
@@ -80,9 +75,13 @@ export const LanguageActions: React.FC<LanguageActionsProps> = ({
 
   const getAccessLevelStyle = () => {
     let level: ContentAccessLevel;
-    if (access.reason === 'open') level = ContentAccessLevel.OPEN;
-    else if (access.reason === 'subscribed') level = ContentAccessLevel.SUBSCRIBED;
-    else level = ContentAccessLevel.RESTRICTED;
+    if (accessResult.hasAccess) {
+      level = ContentAccessLevel.SUBSCRIBED;
+    } else if (language.type === 'open') {
+      level = ContentAccessLevel.OPEN;
+    } else {
+      level = ContentAccessLevel.RESTRICTED;
+    }
     
     return getAccessLevelColors(level, colors);
   };
@@ -104,12 +103,12 @@ export const LanguageActions: React.FC<LanguageActionsProps> = ({
                 <Text style={[styles.statusText, { color: accessColors.text }]}>Free</Text>
               </View>
             )}
-            {language.type === 'subscription' && access.hasAccess && (
+            {language.type === 'subscription' && accessResult.hasAccess && (
               <View style={[styles.statusBadge, { backgroundColor: accessColors.background }]}>
                 <Text style={[styles.statusText, { color: accessColors.text }]}>Subscribed</Text>
               </View>
             )}
-            {language.type === 'subscription' && !access.hasAccess && (
+            {language.type === 'subscription' && !accessResult.hasAccess && (
               <View style={[styles.statusBadge, { backgroundColor: accessColors.background }]}>
                 <Text style={[styles.statusText, { color: accessColors.text }]}>Premium</Text>
               </View>
@@ -141,7 +140,7 @@ export const LanguageActions: React.FC<LanguageActionsProps> = ({
               <Ionicons name="information-circle-outline" size={24} color={colors.textLight} />
               <Text style={styles.noFormatsText}>No formats available for this language</Text>
             </View>
-          ) : access.hasAccess ? (
+          ) : accessResult.hasAccess ? (
             // User has access - show format-specific action buttons
             <View style={styles.actionButtonsContainer}>
               {availableFormats.map((format) => {
@@ -195,6 +194,57 @@ export const LanguageActions: React.FC<LanguageActionsProps> = ({
                     return null;
                 }
               })}
+            </View>
+          ) : accessResult.shouldShowFreeTrialOption ? (
+            // Show free trial promotion when available
+            <View style={styles.alertCard}>
+              <View style={styles.alertHeader}>
+                <Ionicons 
+                  name="gift-outline" 
+                  size={24} 
+                  color={colors.success || '#4CAF50'} 
+                />
+                <Text style={styles.alertTitle}>Free Trial Available!</Text>
+              </View>
+              <Text style={styles.alertText}>
+                {accessResult.message}
+              </Text>
+              
+              <View style={styles.formatInfo}>
+                <Text style={styles.formatTitle}>Available formats:</Text>
+                <View style={styles.formatList}>
+                  {availableFormats.map((format) => (
+                    <View key={format} style={styles.formatItem}>
+                      <Ionicons 
+                        name={
+                          format === 'read' ? 'book-outline' : 
+                          format === 'listen' ? 'headset-outline' : 
+                          'play-circle-outline'
+                        } 
+                        size={16} 
+                        color={colors.primary} 
+                      />
+                      <Text style={styles.formatText}>
+                        {format.charAt(0).toUpperCase() + format.slice(1)}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+
+              {hasFreeTrialActive ? (
+                <FreeTrialActivatedBadge
+                  variant="gradient"
+                  showDate={true}
+                />
+              ) : (
+                <StartFreeTrialButton 
+                  onSuccess={() => {
+                    // Refresh the component to show updated access
+                    // The subscription context will handle state updates
+                  }}
+                />
+              )}
             </View>
           ) : language.type === 'subscription' ? (
             // Premium language not included in subscription - show purchase option
@@ -262,7 +312,7 @@ export const LanguageActions: React.FC<LanguageActionsProps> = ({
                 <Text style={styles.alertTitle}>Subscription Required</Text>
               </View>
               <Text style={styles.alertText}>
-                {access.message}
+                {accessResult.message}
               </Text>
               <TouchableOpacity
                 style={styles.alertButton}
@@ -276,7 +326,7 @@ export const LanguageActions: React.FC<LanguageActionsProps> = ({
                   style={styles.gradientButton}
                 >
                   <Ionicons name="card-outline" size={20} color="#FFFFFF" />
-                  <Text style={styles.alertButtonText}>Get Subscription</Text>
+                  <Text style={styles.alertButtonText}>{accessResult.actionText}</Text>
                 </LinearGradient>
               </TouchableOpacity>
             </View>

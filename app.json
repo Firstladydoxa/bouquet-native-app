@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "tni-bouquetapps-reactnative",
+    "name": "Rhapsody Languages",
     "slug": "tni-bouquetapps-reactnative",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -43,7 +43,14 @@
         }
       ],
       "expo-font",
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "@config-plugins/react-native-blob-util",
+        {
+          "networkSecurityConfig": true
+        }
+      ],
+      "@config-plugins/react-native-pdf"
     ],
     "experiments": {
       "typedRoutes": true,

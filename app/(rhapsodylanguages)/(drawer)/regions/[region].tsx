@@ -33,15 +33,44 @@ const LanguagesByCountryScreen = () => {
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
 
-    // Filter languages based on search query
-    const filteredLanguages = useMemo(() => {
-        if (!searchQuery.trim()) {
-            return languages;
+    // Check authentication on component mount
+    useEffect(() => {
+        if (!user) {
+            // Redirect to sign in if not authenticated
+            router.replace('/(auth)/sign-in');
+            return;
         }
-        return languages.filter(lang => 
-            lang.label.toLowerCase().includes(searchQuery.toLowerCase())
-        );
-    }, [languages, searchQuery]);
+    }, [user, router]);
+
+    // Filter languages based on search query and subscription access
+    const filteredLanguages = useMemo(() => {
+        let filtered = languages;
+        
+        // Apply search filter
+        if (searchQuery.trim()) {
+            filtered = filtered.filter(lang => 
+                lang.label.toLowerCase().includes(searchQuery.toLowerCase())
+            );
+        }
+        
+        // Apply subscription access filter
+        if (user?.subscription) {
+            filtered = filtered.map(lang => {
+                // Check if user has access to this language
+                // For open type languages, everyone has access
+                // For subscription type languages, check subscription status
+                const hasAccess = lang.type === 'open' || 
+                    (user.subscription?.status === 'active' && 
+                     user.subscription.category !== 'free');
+                return {
+                    ...lang,
+                    hasAccess // Add access flag for UI display
+                } as RhapsodyLanguage & { hasAccess: boolean };
+            });
+        }
+        
+        return filtered;
+    }, [languages, searchQuery, user]);
 
     // Use themed styles and colors
     const homeStyles = useThemedStyles(createHomeStyles);
@@ -135,16 +164,33 @@ const LanguagesByCountryScreen = () => {
         loadData();
     }, []);
 
-    if (loading && !refreshing) return <CustomLoader message="Loading languages..." size="large" />;
+    if (loading && !refreshing) return <CustomLoader message="Loading countries..." size="large" />;
+
+    // Show authentication error if user is not signed in
+    if (!user) {
+        return (
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 32, backgroundColor: colors.background }}>
+                <Ionicons name="lock-closed-outline" size={64} color="#ccc" />
+                <Text style={{ fontSize: 18, textAlign: 'center', color: '#666', marginVertical: 24 }}>
+                    Please sign in to access language content
+                </Text>
+                <TouchableOpacity 
+                    style={{ backgroundColor: colors.primary, paddingHorizontal: 32, paddingVertical: 12, borderRadius: 8 }}
+                    onPress={() => router.replace('/(auth)/sign-in')}
+                >
+                    <Text style={{ color: 'white', fontSize: 16, fontWeight: '600' }}>Sign In</Text>
+                </TouchableOpacity>
+            </View>
+        );
+    }
 
     return (
-        <View style={homeStyles.container}>
-            {/* Back Button Header */}
+        <View style={{ flex: 1, backgroundColor: colors.background }}>
+            {/* Header */}
             <View style={styles.headerContainer}>
                 <TouchableOpacity 
-                    onPress={() => router.push("/(rhapsodylanguages)/(drawer)/regions/list")}
                     style={styles.backButton}
-                    activeOpacity={0.7}
+                    onPress={() => router.back()}
                 >
                     <Ionicons name="arrow-back" size={24} color={colors.primary} />
                 </TouchableOpacity>

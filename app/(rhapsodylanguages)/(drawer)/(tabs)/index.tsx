@@ -1,3 +1,5 @@
+import DailyRhapsodyCard from '@/components/home/DailyRhapsodyCard';
+import PromotionalBanner from '@/components/home/PromotionalBanner';
 import { SubscriptionStats } from '@/components/subscriptions/SubscriptionStats';
 import CustomLoader from '@/components/ui/CustomLoader';
 import { useThemeColors } from '@/hooks/use-themed-styles';
@@ -172,55 +174,6 @@ export default function HomeScreen() {
     router.push('/(rhapsodylanguages)/(drawer)/(tabs)/subscriptions');
   };
 
-  const renderTestMediaSection = () => (
-    <View style={{ paddingHorizontal: 20, paddingVertical: 24 }}>
-      <Text style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 8, color: colors.text }}>
-        🎬 Test Media System
-      </Text>
-      <Text style={{ fontSize: 16, marginBottom: 20, color: colors.textLight }}>
-        Test the new MediaAPI and video/audio system with sample content.
-      </Text>
-      
-      <View style={languageCategoriesStyles.cardsContainer}>
-        <TouchableOpacity 
-          style={[languageCategoriesStyles.cardContainer, { backgroundColor: colors.primary }]}
-          onPress={() => router.push('/(rhapsodylanguages)/(drawer)/listen/English')}
-        >
-          <LinearGradient
-            colors={[colors.primary || '#007AFF', colors.secondary || '#5856D6']}
-            style={[languageCategoriesStyles.cardSide, { padding: 16 }]}
-          >
-            <Ionicons name="headset" size={40} color="#FFFFFF" />
-            <Text style={{ color: '#FFFFFF', fontSize: 16, fontWeight: 'bold', marginTop: 8 }}>
-              Test Audio
-            </Text>
-            <Text style={{ color: '#FFFFFF', fontSize: 12, opacity: 0.9 }}>
-              Daily audio lesson
-            </Text>
-          </LinearGradient>
-        </TouchableOpacity>
-
-        <TouchableOpacity 
-          style={[languageCategoriesStyles.cardContainer, { backgroundColor: colors.secondary }]}
-          onPress={() => router.push('/(rhapsodylanguages)/(drawer)/watch/English')}
-        >
-          <LinearGradient
-            colors={[colors.secondary || '#5856D6', colors.primary || '#007AFF']}
-            style={[languageCategoriesStyles.cardSide, { padding: 16 }]}
-          >
-            <Ionicons name="videocam" size={40} color="#FFFFFF" />
-            <Text style={{ color: '#FFFFFF', fontSize: 16, fontWeight: 'bold', marginTop: 8 }}>
-              Test Video
-            </Text>
-            <Text style={{ color: '#FFFFFF', fontSize: 12, opacity: 0.9 }}>
-              Daily video lesson
-            </Text>
-          </LinearGradient>
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
-
   // Language Categories Styles
   const languageCategoriesStyles = StyleSheet.create({
     sectionContainer: {
@@ -302,19 +255,23 @@ export default function HomeScreen() {
       width: '80%',
       height: 75,
       borderRadius: 12,
-      borderWidth: 2,
-      padding: 5,
+      overflow: 'hidden',
+      marginBottom: 12,
+    },
+    miniCardGradient: {
+      flex: 1,
+      padding: 12,
       alignItems: 'center',
       justifyContent: 'center',
     },
     miniCardIcon: {
-      marginBottom: 1,
+      marginBottom: 4,
     },
     miniCardText: {
-      fontSize: 12,
-      fontWeight: 'bold',
+      fontSize: 13,
+      fontWeight: '600',
       textAlign: 'center',
-      lineHeight: 12,
+      lineHeight: 16,
     },
     subscribeButton: {
       borderRadius: 16,
@@ -422,7 +379,7 @@ export default function HomeScreen() {
 
     return (
       <View style={languageCategoriesStyles.sectionContainer}>
-        <Text style={[commonStyles.rhapsLangSectionTitle, { color: colors.secondary }]}>
+        <Text style={[commonStyles.rhapsLangSectionTitle, { color: colors.tertiary }]}>
           Languages Categories
         </Text>
         
@@ -480,53 +437,55 @@ export default function HomeScreen() {
               >
                 <View style={languageCategoriesStyles.backContent}>
                   <TouchableOpacity
-                    style={[
-                      languageCategoriesStyles.miniCard,
-                      { 
-                        backgroundColor: colors.card,
-                        borderColor: colors.primary,
-                      }
-                    ]}
+                    style={languageCategoriesStyles.miniCard}
                     onPress={handleRegionsNavigation}
                     activeOpacity={0.7}
                   >
-                    <Ionicons
-                      name="globe-outline"
-                      size={32}
-                      color={colors.primary}
-                      style={languageCategoriesStyles.miniCardIcon}
-                    />
-                    <Text style={[
-                      languageCategoriesStyles.miniCardText,
-                      { color: colors.primary }
-                    ]}>
-                      Languages by Regions
-                    </Text>
+                    <LinearGradient
+                      colors={[colors.primary || '#3B82F6', colors.secondary || '#10B981']}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={languageCategoriesStyles.miniCardGradient}
+                    >
+                      <Ionicons
+                        name="globe-outline"
+                        size={32}
+                        color="#FFFFFF"
+                        style={languageCategoriesStyles.miniCardIcon}
+                      />
+                      <Text style={[
+                        languageCategoriesStyles.miniCardText,
+                        { color: '#FFFFFF' }
+                      ]}>
+                        Languages by Regions
+                      </Text>
+                    </LinearGradient>
                   </TouchableOpacity>
                   
                   <TouchableOpacity
-                    style={[
-                      languageCategoriesStyles.miniCard,
-                      { 
-                        backgroundColor: colors.card,
-                        borderColor: colors.secondary,
-                      }
-                    ]}
+                    style={languageCategoriesStyles.miniCard}
                     onPress={handleAlphabetNavigation}
                     activeOpacity={0.7}
                   >
-                    <Ionicons
-                      name="library-outline"
-                      size={32}
-                      color={colors.secondary}
-                      style={languageCategoriesStyles.miniCardIcon}
-                    />
-                    <Text style={[
-                      languageCategoriesStyles.miniCardText,
-                      { color: colors.secondary }
-                    ]}>
-                      Languages by Alphabet
-                    </Text>
+                    <LinearGradient
+                      colors={[colors.secondary || '#10B981', colors.tertiary || colors.primary]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={languageCategoriesStyles.miniCardGradient}
+                    >
+                      <Ionicons
+                        name="library-outline"
+                        size={32}
+                        color="#FFFFFF"
+                        style={languageCategoriesStyles.miniCardIcon}
+                      />
+                      <Text style={[
+                        languageCategoriesStyles.miniCardText,
+                        { color: '#FFFFFF' }
+                      ]}>
+                        Languages by Alphabet
+                      </Text>
+                    </LinearGradient>
                   </TouchableOpacity>
                 </View>
               </Animated.View>
@@ -669,8 +628,9 @@ export default function HomeScreen() {
     <View style={{ flex: 1 }}>
       <ScrollView style={commonStyles.container} showsVerticalScrollIndicator={false}>
         {renderCarousel()}
+        <PromotionalBanner />
+        <DailyRhapsodyCard />
         <SubscriptionStats />
-        {renderTestMediaSection()}
         {renderAboutSection()}
         {renderLanguageCategories()}
         {renderUpcomingPrograms()}

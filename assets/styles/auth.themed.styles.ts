@@ -17,6 +17,14 @@ export const createAuthStyles = (colors: ThemeColors) => StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 40,
   },
+  backButton: {
+    position: "absolute" as const,
+    top: 10,
+    left: 10,
+    zIndex: 10,
+    padding: 8,
+    borderRadius: 8,
+  },
   imageContainer: {
     height: height * 0.3,
     marginBottom: 30,

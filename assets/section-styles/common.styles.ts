@@ -21,7 +21,7 @@ export const createCommonStyles = (colors: any) => StyleSheet.create({
     fontSize: 25,
     textAlign: 'center',
     fontFamily: 'BerkshireSwash_400Regular',
-    color: colors.secondary,
+    color: colors.tertiary || '#333333', // fallback color
     marginBottom: 25,
   },  
 });

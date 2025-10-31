@@ -139,7 +139,7 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
   headerTitle: {
     fontSize: 24,
     fontFamily: 'BerkshireSwash_400Regular',
-    color: colors.primary,
+    color: colors.tertiary || '#3847d6',
     marginBottom: 8,
     textAlign: 'center',
   },
@@ -210,5 +210,6 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
     fontSize: 14,
     color: colors.textLight,
     lineHeight: 20,
+    fontWeight: '600',
   },
 });

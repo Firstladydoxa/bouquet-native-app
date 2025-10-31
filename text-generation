@@ -1,0 +1,129 @@
+There was an error in the backend about how the user was rendered in the different auth responses. Now the LARAVEL_BACKEND_AUTH_GUIDE.md document has been updated with the accurate data. The next change I want you to do is to update the authentication flow where needed, based on the new information in the LARAVEL_BACKEND_AUTH_GUIDE.md doc. Take in consideration that the environment base api url already has /api appended, so when applying the endpoints mentiond in the guide, make sure not to duplicate the /api. Also, there is a verification done during the login process, to confirmed if the email was verified. This is to cover the case where during the registration process the user closed the app without inputting the verification code, or a connection problem that caused the app to close before the email verification could be completed. Now when the user comes back and try to login with that email, it will send an error, asking the user to verify his mail first. There's a section Resend Verification Code that treats that case. I want you to implement that scenario during the the login process; If the reponse from the login function is a prompt for the user to verify his email, trigger the endpoint to resend code for email verification and redirect the user to the verify-email to duely complete the registration.
+
+The SUBSCRIPTION_SYSTEM_GUIDE.md is a complete guide document about the Subscription System from the backend. I want you to refer to that document to update the regions/[region] and alphabet/index pages, on how the buttons Read, Listen, and Download are rendered. For free languages, display the 3 buttons. For premium languages check if the user has a subscription that gives him access to that particular language. If the user is still on the default subscription 'Always Free', that gives only access to free languages, then hide the Read, Listen, and Download buttons and display a text to the user to notify him that the language is premium but there's is a promotional Free Trial running now till 31st december that gives access to all free + premium languages. Then at the bottom just display a Start Free Trial button that will redirect to the subscription/index page.
+If the user is already on Free trial subscription, then display the 3 buttons Read, Listen, and Download. If the user has a paid subscription, check if the language is included in his subscription. If yes, display the 3 buttons. if no, hide the 3 buttons and display a message to let him know that the language is not included in his subcription, but he can purchase that language as additional language that will be added to his subscription. Display the Add additional language at the bottom that will redirect to the buy page.
+
+    limited
+
+Next change is in the manage subscription page, I want the packages to be reordered as follow: 
+the All language Free trial first, then secondly the Always Free, then the all the rest.
+For the All Language Free trial package don't display the subscribe now button, just the Start Free trial button. The endpoint and api request for starting the free trial are documented 
+in SUBSCRIPTION_SYSTEM_GUIDE.md. If need be extract the logic to start the free Trial to a component that you can use as widget.
+For the Always free package, don't display any button, since it's the subscription by default for all registered users. If the user is still on that subscription, then mark it with 
+the currently active header. If he has already upgraded to a paid plan, just leave the leave the card as it is, with the package Title, the items, etc, with no button.
+For all other packages, check if the period for the promotional Free trial is still valid. If yes, don't display the subscribe now button, rather just the Start Free Trial button to 
+start the Free Trial. If the Free trial period is over, then display the subscribe now button. Reason is, for the duration of the promotion, we want to offer every body the opportunity 
+to have access to free + premium languages, even without subscribing to a paid plan. During this promotional period, we are pushing the Free trial for every one. Only after the 
+promotion we will continue to push for paid plans. So for all the paid plans, still display the Start Free Trial button.
+Finally, I want you to update the Settings page to accomodate also the profile features. Change the structure of the page to have a tab menu with 2 buttons that control the content 
+associated with them: Profile and Settings. It should function as follow: when you click on the profile button, the content for the Profile should be disyplayed. When you click on the 
+    setttings buton the content for the setings should be displayed. Set the 2 buttons colors to the Theme color primary and secondary.
+For that effect, create the profile view and settings view. The settings view is already settled, the conttent is already there. For the profile view, controlled by the Profile tab menu 
+button, I want you to implement a profile management based on the LARAVEL_BACKEND_AUTH_GUIDE.md, where the user can update his profile. A first section to update only Firstname, lastname 
+and country; email cannot be updated for now. A second section to reset password. Display the sections as beautiful cards.
+
+There are many errors that need to be addressed. Fix those first. After that, update the Home page with a section Read Rhapsody daily. What I want to achieve is to display an extract of 
+the article for the day, and add a read more button that will redirect the user to the daily/index page. Check the daily/index to see how it is implemented. It extract 3 pages of the 
+Rhapsody pdf document, that corresponds to the current day. Now I would like you to get the pdf for the English language, calculate the 2 pages that correspond with the current day, 
+then get the first page and extract just the title, date and first paragraph as text, and display it in that section, to give the user an hint of what is expecting them, and to raise 
+interest. Then add the read more button and redirect them to the daily/index. Display that section also as a beautiful card.
+
+The read/[code] page now has a funny behaviour. It doesn't scroll vertically anymore. The navigation page is not moving past the first page, when clicking on the next button. 
+It frizzes at the first page; and horizontal scrolling also not working. Moreover, the page indicator at the top, under the Gradient section, is showing page 1 of 2 (50%). 
+This will suggest that zhr page calculation is trying to extract 2 pages, making th totalnumber of pages invalid. 
+
+Next, the daily/index page pdf view is now back to vertical scroll. But the issue with the correct pages that should be displayed still persist. The whole document is displayed, 
+instead of the 3 pages requested. There is problem with calculation. I will suggest that you check deeply and throughouly the calculation system and all the logic associated with it, 
+and if needs be you rewrite from scratch, but by making sure to not temper with the logic of how the files are being fetched from the backend. Just the calculation of the correct 
+pages that needs to be displayed based on the current day. For references, here are the specifications for the calculation of the pages to extract. 
+(from previous chats: --start of specification in previous chats--"The SUBSCRIPTION_SYSTEM_GUIDE.md is a complete guide document about the Subscription System from the backend. 
+I want you to refer to that document to update the regions/[region] and alphabet/index pages, on how the buttons Read, Listen, and Download are rendered. For free languages, 
+display the 3 buttons. For premium languages check if the user has a subscription that gives him access to that particular language. If the user is still on the default subscription 
+'Always Free', that gives only access to free languages, then hide the Read, Listen, and Download buttons and display a text to the user to notify him that the language is premium 
+but there's is a promotional Free Trial running now till 31st december that gives access to all free + premium languages. Then at the bottom just display a Start Free Trial button 
+that will trigger the free trial widget component.
+If the user is already on Free trial subscription, then display the 3 buttons Read, Listen, and Download. If the user has a paid subscription, check if the language is included 
+in his subscription. If yes, display the 3 buttons. if no, hide the 3 buttons and display a message to let him know that the language is not included in his subcription, but he 
+can purchase that language as additional language that will be added to his subscription. Display the Add additional language at the bottom that will redirect to the buy page.
+
+Next change is in the manage subscription page, I want the packages to be reordered as follow: 
+the "All Languages Free Trial" first, then secondly the "Always Free", then the all the rest.
+For the All Language Free trial package don't display the subscribe now button, just the Start Free trial button. The endpoint and api request for starting the free trial 
+are documented in SUBSCRIPTION_SYSTEM_GUIDE.md. If need be extract the logic to start the free Trial to a component that you can use as widget.
+For the Always free package, don't display any button, since it's the subscription by default for all registered users. If the user is still on that subscription, then mark it with 
+the currently active header. If he has already upgraded to a paid plan, just leave the card as it is, with the package Title, the items, etc, with no button.
+For all other packages, check if the period for the promotional Free trial is still valid. If yes, don't display the subscribe now button, rather just the Start Free Trial button 
+to start the Free Trial. If the Free trial period is over, then display the subscribe now button. Reason is, for the duration of the promotion, we want to offer every body 
+the opportunity to have access to free + premium languages, even without subscribing to a paid plan. During this promotional period, we are pushing the Free trial for every one. 
+Only after the promotion we will continue to push for paid plans. So for all the paid plans, still display the Start Free Trial button." --end of specification in previous chats--). 
+Based on that, check if the option where the user has a paid subscription has been implemented already. If not, complete it. Also based on the specification, 
+update the subscription/manage page. The Subscribe now button is still displayed. Pay attention to reordering the packages as requested, and display the buttons accordingly.
+Next, the free trial activation error in both pages regions/[region] and alphabet/index still persits: Here the error: [StartFreeTrial] Attempting to activate free trial...
+ LOG  [StartFreeTrial] Response: {"message": "No active subscription found", "success": false}
+ ERROR  [StartFreeTrial] Error: [Error: No active subscription found].
+Finally, once the start free trial activation error is fixed, update the Start Free trial button in the Promotion section of the home page to use the StartFreeTrial widget as well.
+
+Next change is the RhapsodyDaily Section in the Home page. What you implemented is nice but not exactly what I requested. What I want to achieve is this:
+the calculation logic for the daily pages is supposed to extract 3 pages from the Rhapsody daily pdf document, based on the current day of the month.
+Now, I wold like you to get the second page from the 3 pages extracted for the current day, which should be the first page of the daily article, since the first page is the 
+cover page. Using that second page, extract just the beginning text from that page, meaning the title of the article, the date and the first paragraph of the article. Extract it
+as a plain text, not as pdf extract. Then display that text extract in the Rhapsody Daily section of the Home page, and add the read more button that will redirect to the 
+daily/index page. 
+So in summary, update the Rhapsody Daily section to extract from the English daily pdf, precisely the second page among the three pages extracted for the current day; 
+From that page extract the title, date and first paragraph of the article as plain text and display it in the Home page Rhapsody Daily section. The purpose is to give the user
+an hint of what is expecting them in the daily article, to raise interest.
+ Next, the Activation of the Free Trial is still giving error:  ERROR  [StartFreeTrial] Error: [Error: Unauthenticated.] 
+
+Call Stack
+  activateFreeTrial (components\ui\StartFreeTrialButton.tsx)
+  next (<native>)
+  asyncGeneratorStep (node_modules\@babel\runtime\helpers\asyncToGenerator.js)
+  _next (node_modules\@babel\runtime\helpers\asyncToGenerator.js)
+
+
+
+Next, the recent changes you made are not reflecting on the build on my device. I'm not sure why. The pdf in the read/[code] page is still fixed; it doesn't scroll neither 
+vertically nor horizontally.
+The daily/index page is still displaying the whole document instead of the 3 pages for the current day.. Moreover, the bottom page navigation still not visible in the
+in the limits of the viewport.
+
+
+
+// STRICT: Only allow pages within our daily selection
+    if (dailyPagesOnly.includes(page)) {
+        setCurrentPage(page);
+        console.log('Page change allowed to:', page);
+    } else {
+        // Prevent navigation to unauthorized pages
+        console.log('Page change blocked for:', page, 'staying on:', currentPage);
+        // Force PDF back to current valid page
+        setTimeout(() => {
+            if (!dailyPagesOnly.includes(currentPage)) {
+                setCurrentPage(dailyPagesOnly[0]);
+            }
+        }, 100);
+    }
+
+
+
+                                const goToNextPage = () => {
+        const currentIndex = dailyPagesOnly.indexOf(currentPage);
+        if (currentIndex >= 0 && currentIndex < dailyPagesOnly.length - 1) {
+            const nextPage = dailyPagesOnly[currentIndex + 1];
+            console.log('Navigating to next page:', nextPage, 'from index:', currentIndex);
+            setCurrentPage(nextPage);
+        } else {
+            console.log('Already at last page, current index:', currentIndex);
+        }
+    };
+
+    const goToPreviousPage = () => {
+        const currentIndex = dailyPagesOnly.indexOf(currentPage);
+        if (currentIndex > 0) {
+            const prevPage = dailyPagesOnly[currentIndex - 1];
+            console.log('Navigating to previous page:', prevPage, 'from index:', currentIndex);
+            setCurrentPage(prevPage);
+        } else {
+            console.log('Already at first page, current index:', currentIndex);
+        }
+    };

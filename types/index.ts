@@ -5,34 +5,43 @@
 // ============================================
 
 export interface User {
-  id: string;
+  id: number; // Changed from string to number to match Laravel backend
+  code?: string; // Added to match Laravel backend
   email: string;
-  firstName?: string;
-  lastName?: string;
+  firstname?: string;
+  lastname?: string;
   username?: string;
-  name?: string;
-  createdAt: string;
-  updatedAt: string;
+  email_verified_at?: string | null; // Added to match Laravel backend
+  createdAt?: string;
+  updatedAt?: string;
+  created_at?: string; // Laravel uses snake_case
+  updated_at?: string; // Laravel uses snake_case
+  profile?: {
+    code: string;
+    [key: string]: any;
+  };
   subscription?: SubscriptionDetails;
   subscriptionDate?: string;
   metadata?: Record<string, any>;
 }
 
 export interface SubscriptionDetails {
-  code: string;
-  id: number
-  user_id: string;
-  language_id: string;
+  code?: string;
+  id: number;
+  user_id: number; // Changed from string to number
+  language_id?: number | null; // Changed to number and nullable
   language: string[];  // Changed to array to support multiple languages
-  package_id: string;
+  package_id: number; // Changed from string to number
   start: string;
   end: string;
-  status: 'active' | 'free trial' | 'cancelled' | 'expired' | 'past_due';
+  status: 'active' | 'free_trial' | 'cancelled' | 'expired' | 'past_due'; // Added free_trial
+  category: 'free' | 'free_trial' | 'standard' | 'basic' | 'premium'; // Added free_trial
+  expires_at?: string; // Added for Laravel backend
   package?: Package;
   next_payment_date?: string;
   trial_end?: string;
   cancel_at?: string;
-  cancel_at_period_end: boolean;
+  cancel_at_period_end?: boolean; // Made optional
 }
 
 export interface AuthState {
@@ -43,32 +52,80 @@ export interface AuthState {
 }
 
 export interface SignInData {
-  identifier: string; // email or username
+  email: string;
+  password: string;
+}
+
+export interface SignInPayload {
+  email: string;
   password: string;
 }
 
 export interface SignInResponse {
   user: User;
   token: string;
+  token_type: string;
   expires_in: number;
 }
 
 export interface SignUpData {
   email: string;
   password: string;
-  firstName?: string;
-  lastName?: string;
+  firstname?: string;
+  lastname?: string;
   username?: string;
   country?: string;
 }
 
+export interface RegisterPayload {
+  firstname: string;
+  lastname?: string;
+  email: string;
+  password: string;
+  country: string;
+}
+
+export interface RegisterResponse {
+  user: User;
+  token: string;
+  token_type?: string;
+  expires_in?: number;
+  message: string;
+  verification_required: boolean;
+  profile?: {
+    user_id: number;
+    country: string;
+    code: string;
+  };
+  subscription?: {
+    category: string;
+    status: string;
+    selected_languages: string[];
+  };
+}
+
+export interface VerifyEmailPayload {
+  email: string;
+  code: string;
+}
+
+export interface VerifyEmailResponse {
+  user: User;
+  message: string;
+  verified: boolean;
+}
+
 export interface AuthContextType extends AuthState {
+  tokenExpiresAt?: Date | null;
   signIn: (data: SignInData) => Promise<{ status: 'complete' | 'error'; error?: string }>;
   signUp: (data: SignUpData) => Promise<{ status: 'complete' | 'needs_verification' | 'error'; error?: string }>;
   signOut: () => Promise<void>;
   updateUser: (data: Partial<User>) => Promise<void>;
   getToken: () => Promise<string | null>;
   refreshUser: () => Promise<void>;
+  refreshToken: () => Promise<void>;
+  verifyEmail: (email: string, code: string) => Promise<{ status: 'complete' | 'error'; error?: string }>;
+  resendVerificationCode: (email: string) => Promise<{ status: 'complete' | 'error'; error?: string }>;
 }
 
 // ============================================
@@ -93,6 +150,7 @@ export interface Package {
   items: PackageItem[];
   amount: number;
   currency_options: any;
+  category?: 'free' | 'free_trial' | 'standard' | 'basic' | 'premium';
 }
 
 // ============================================
@@ -146,8 +204,39 @@ export interface ApiResponse<T> {
   success: boolean;
 }
 
+export interface RequestResponse<T> {
+  success: boolean;
+  message: string;
+  data: T;
+}
+
 // ============================================
 // Region Types
+// ============================================
+
+export interface DailyReadingPageInfo {
+  coverPage: number;
+  startPage: number;
+  endPage: number;
+  totalPages: number;
+  dayOfMonth: number;
+}
+
+export interface FreeTrialWidgetProps {
+  packageId: string;
+  priceId: string;
+  onSuccess?: () => void;
+  style?: any;
+}
+
+export interface DailyRhapsodyLanguage {
+  label: string;
+  file_name: string;
+  type: 'open' | 'subscription';
+}
+
+// ============================================
+// Region Types (existing)
 // ============================================
 
 export interface Region {
@@ -170,6 +259,7 @@ export interface RhapsodyLanguage {
   listen: string;
   watch: string;
   type?: 'open' | 'subscription';
+  file_name?: string; // Make optional to avoid conflicts
   pivot: {
     country_id: number;
     rorlanguage_id: number;

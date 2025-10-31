@@ -4,10 +4,12 @@ import React, { useMemo } from 'react';
 
 export interface ContentAccessResult {
   hasAccess: boolean;
-  reason: 'open' | 'subscribed' | 'no-subscription' | 'not-included';
+  reason: 'open' | 'free-trial' | 'always-free' | 'subscribed' | 'no-subscription' | 'not-included';
   requiresSubscription: boolean;
   shouldShowPurchaseOption: boolean;
+  shouldShowFreeTrialOption: boolean;
   message?: string;
+  actionText?: string;
 }
 
 export interface SubscriptionService {
@@ -19,115 +21,199 @@ export interface SubscriptionService {
     restricted: RhapsodyLanguage[];
   };
   shouldShowSubscriptionPrompt: (language: RhapsodyLanguage) => boolean;
+  isEligibleForFreeTrial: () => boolean;
+  isFreeTrialActive: () => boolean;
+  isPromotionalPeriodActive: () => boolean;
+  getSubscriptionCategory: () => 'free' | 'free_trial' | 'basic' | 'standard' | 'premium';
 }
 
 /**
  * Centralized subscription service hook
  * Handles all content protection and subscription validation logic
+ * Updated to match SUBSCRIPTION_SYSTEM_GUIDE.md specifications
  */
 export const useSubscriptionService = (): SubscriptionService => {
   const { user } = useAuth();
   const { hasSubscription, subscriptionDetails } = useSubscription();
 
   const service = useMemo<SubscriptionService>(() => {
+    
+    /**
+     * Check if promotional free trial period is still active
+     */
+    const isPromotionalPeriodActive = (): boolean => {
+      const promotionEndDate = new Date('2025-12-31T23:59:59');
+      const now = new Date();
+      return now <= promotionEndDate;
+    };
+
+    /**
+     * Get user's subscription category based on backend patterns
+     */
+    const getSubscriptionCategory = (): 'free' | 'free_trial' | 'basic' | 'standard' | 'premium' => {
+      if (!subscriptionDetails) return 'free';
+      
+      // Check for free trial pattern
+      if (subscriptionDetails.category === 'free_trial' || 
+          subscriptionDetails.language?.includes('*')) {
+        return 'free_trial';
+      }
+      
+      // Check for always free pattern
+      if (subscriptionDetails.category === 'free' || 
+          subscriptionDetails.language?.includes('@free')) {
+        return 'free';
+      }
+      
+      // Return specific paid category
+      return subscriptionDetails.category as 'basic' | 'standard' | 'premium';
+    };
+
+    /**
+     * Check if user is eligible for free trial
+     */
+    const isEligibleForFreeTrial = (): boolean => {
+      const category = getSubscriptionCategory();
+      return category === 'free' && isPromotionalPeriodActive();
+    };
+
+    /**
+     * Check if user has active free trial
+     */
+    const isFreeTrialActive = (): boolean => {
+      const category = getSubscriptionCategory();
+      if (category !== 'free_trial') return false;
+      
+      // Check if trial hasn't expired
+      const trialEndDate = new Date('2025-12-31T23:59:59');
+      const now = new Date();
+      return now <= trialEndDate;
+    };
+
     /**
      * Check if user has access to a specific language
+     * Based on SUBSCRIPTION_SYSTEM_GUIDE.md patterns
      */
     const checkLanguageAccess = (language: RhapsodyLanguage): ContentAccessResult => {
-      // If language is open, everyone has access
+      // If language is open/free, everyone has access
       if (language.type === 'open') {
         return {
           hasAccess: true,
           reason: 'open',
           requiresSubscription: false,
           shouldShowPurchaseOption: false,
-          message: 'This language is available to everyone'
+          shouldShowFreeTrialOption: false,
+          message: 'This language is available to everyone',
+          actionText: undefined
         };
       }
 
-      // If language requires subscription
+      // If language requires subscription (premium language)
       if (language.type === 'subscription') {
-        // Check if user has any subscription
-        if (!hasSubscription || !subscriptionDetails) {
+        const category = getSubscriptionCategory();
+        
+        // FREE TRIAL USERS - ["*"] pattern - access to all languages
+        if (category === 'free_trial' && isFreeTrialActive()) {
           return {
-            hasAccess: false,
-            reason: 'no-subscription',
-            requiresSubscription: true,
-            shouldShowPurchaseOption: true,
-            message: 'This language requires a subscription. Subscribe to get access.'
+            hasAccess: true,
+            reason: 'free-trial',
+            requiresSubscription: false,
+            shouldShowPurchaseOption: false,
+            shouldShowFreeTrialOption: false,
+            message: 'You have access through your free trial (ends Dec 31, 2025)',
+            actionText: undefined
           };
         }
 
-        // Check if user is on free trial
-        if (subscriptionDetails.status === 'free trial') {
-          const trialEndDate = new Date('2025-12-31T23:59:59');
-          const now = new Date();
-          
-          if (now <= trialEndDate) {
-            // Free trial gives access to ALL languages
+        // ALWAYS FREE USERS - ["@free"] pattern - no access to premium
+        if (category === 'free') {
+          if (isEligibleForFreeTrial()) {
             return {
-              hasAccess: true,
-              reason: 'subscribed',
+              hasAccess: false,
+              reason: 'always-free',
               requiresSubscription: true,
               shouldShowPurchaseOption: false,
-              message: 'You have access through your free trial (ends Dec 31, 2025)'
+              shouldShowFreeTrialOption: true,
+              message: 'This is a premium language, but there\'s a promotional Free Trial running now till December 31st that gives access to all free + premium languages.',
+              actionText: 'Start Free Trial'
             };
           } else {
+            return {
+              hasAccess: false,
+              reason: 'always-free',
+              requiresSubscription: true,
+              shouldShowPurchaseOption: true,
+              shouldShowFreeTrialOption: false,
+              message: 'This is a premium language. Upgrade your subscription to get access.',
+              actionText: 'Upgrade Subscription'
+            };
+          }
+        }
+
+        // PAID SUBSCRIPTION USERS - specific language arrays
+        if (category === 'basic' || category === 'standard' || category === 'premium') {
+          // Check if subscription is active
+          if (subscriptionDetails?.status !== 'active') {
             return {
               hasAccess: false,
               reason: 'no-subscription',
               requiresSubscription: true,
               shouldShowPurchaseOption: true,
-              message: 'Your free trial has expired. Subscribe to continue accessing this language.'
+              shouldShowFreeTrialOption: false,
+              message: `Your subscription is ${subscriptionDetails?.status}. Please renew to access this language.`,
+              actionText: 'Renew Subscription'
+            };
+          }
+
+          // Check if language is included in subscription
+          const isLanguageIncluded = subscriptionDetails?.language?.includes(language.label) || false;
+          
+          if (isLanguageIncluded) {
+            return {
+              hasAccess: true,
+              reason: 'subscribed',
+              requiresSubscription: false,
+              shouldShowPurchaseOption: false,
+              shouldShowFreeTrialOption: false,
+              message: 'You have access to this language through your subscription',
+              actionText: undefined
+            };
+          } else {
+            return {
+              hasAccess: false,
+              reason: 'not-included',
+              requiresSubscription: true,
+              shouldShowPurchaseOption: true,
+              shouldShowFreeTrialOption: false,
+              message: 'This language is not included in your subscription, but you can purchase it as an additional language that will be added to your subscription.',
+              actionText: 'Add Additional Language'
             };
           }
         }
 
-        // Check if subscription is active
-        if (subscriptionDetails.status !== 'active') {
-          return {
-            hasAccess: false,
-            reason: 'no-subscription',
-            requiresSubscription: true,
-            shouldShowPurchaseOption: true,
-            message: `Your subscription is ${subscriptionDetails.status}. Please renew to access this language.`
-          };
-        }
-
-        // Check if the specific language is included in user's subscription
-        // Support wildcard '*' or 'all' for unlimited access plans
-        const hasWildcard = subscriptionDetails.language?.includes('*') || 
-                           subscriptionDetails.language?.includes('all');
-        const isLanguageIncluded = hasWildcard || 
-                                  subscriptionDetails.language?.includes(language.label) || 
-                                  false;
-        
-        if (isLanguageIncluded) {
-          return {
-            hasAccess: true,
-            reason: 'subscribed',
-            requiresSubscription: true,
-            shouldShowPurchaseOption: false,
-            message: 'You have access to this language through your subscription'
-          };
-        } else {
-          return {
-            hasAccess: false,
-            reason: 'not-included',
-            requiresSubscription: true,
-            shouldShowPurchaseOption: true,
-            message: 'This language is not included in your current subscription. You can purchase access to this language.'
-          };
-        }
+        // No subscription at all
+        return {
+          hasAccess: false,
+          reason: 'no-subscription',
+          requiresSubscription: true,
+          shouldShowPurchaseOption: true,
+          shouldShowFreeTrialOption: isEligibleForFreeTrial(),
+          message: isEligibleForFreeTrial() 
+            ? 'This language requires a subscription. Start your free trial to get access to all languages.'
+            : 'This language requires a subscription. Subscribe to get access.',
+          actionText: isEligibleForFreeTrial() ? 'Start Free Trial' : 'Subscribe Now'
+        };
       }
 
-      // Default fallback (shouldn't happen with proper typing)
+      // Default fallback
       return {
         hasAccess: false,
         reason: 'no-subscription',
         requiresSubscription: true,
         shouldShowPurchaseOption: true,
-        message: 'Access requirements unclear'
+        shouldShowFreeTrialOption: false,
+        message: 'Access requirements unclear',
+        actionText: 'Get Access'
       };
     };
 
@@ -140,6 +226,19 @@ export const useSubscriptionService = (): SubscriptionService => {
       }
 
       if (languageType === 'subscription') {
+        const category = getSubscriptionCategory();
+        
+        // Free trial has access to all
+        if (category === 'free_trial' && isFreeTrialActive()) {
+          return true;
+        }
+        
+        // Always free has no access to premium
+        if (category === 'free') {
+          return false;
+        }
+        
+        // Paid subscriptions - check specific language
         if (!hasSubscription || !subscriptionDetails) {
           return false;
         }
@@ -169,7 +268,7 @@ export const useSubscriptionService = (): SubscriptionService => {
         
         if (access.reason === 'open') {
           open.push(language);
-        } else if (access.reason === 'subscribed') {
+        } else if (access.hasAccess) {
           subscribed.push(language);
         } else {
           restricted.push(language);
@@ -184,14 +283,18 @@ export const useSubscriptionService = (): SubscriptionService => {
      */
     const shouldShowSubscriptionPrompt = (language: RhapsodyLanguage): boolean => {
       const access = checkLanguageAccess(language);
-      return access.shouldShowPurchaseOption;
+      return access.shouldShowPurchaseOption || access.shouldShowFreeTrialOption;
     };
 
     return {
       checkLanguageAccess,
       canAccessContent,
       getAccessibilityInfo,
-      shouldShowSubscriptionPrompt
+      shouldShowSubscriptionPrompt,
+      isEligibleForFreeTrial,
+      isFreeTrialActive,
+      isPromotionalPeriodActive,
+      getSubscriptionCategory
     };
   }, [hasSubscription, subscriptionDetails, user]);
 
@@ -252,9 +355,9 @@ export const getAccessLevelColors = (level: ContentAccessLevel, colors: any) => 
       };
     case ContentAccessLevel.SUBSCRIBED:
       return {
-        primary: colors.primary || '#3B82F6',
-        background: colors.primaryBackground || '#EBF4FF',
-        text: colors.primaryText || '#1E40AF'
+        primary: colors.success || '#10B981', // Changed to green
+        background: colors.successBackground || '#ECFDF5', // Light green background
+        text: colors.successText || '#047857' // Dark green text
       };
     case ContentAccessLevel.RESTRICTED:
       return {

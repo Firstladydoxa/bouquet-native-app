@@ -1,9 +1,12 @@
 import CustomLoader from '@/components/ui/CustomLoader';
+import FreeTrialActivatedBadge from '@/components/ui/FreeTrialActivatedBadge';
+import StartFreeTrialButton from '@/components/ui/StartFreeTrialButton';
 import { ThemeSelector } from '@/components/ui/ThemeSelector';
-import { useAuth, useUser } from '@/contexts';
+import { useAuth, useSubscription, useUser } from '@/contexts';
 import { useThemeColors } from '@/hooks/use-themed-styles';
 import { PaymentApi } from '@/services/paymentApi';
 import { RhapsodyLanguagesAPI } from '@/services/rhapsodylanguagesApi';
+import { useSubscriptionService } from '@/services/subscriptionService';
 import type { Package } from '@/types';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -16,6 +19,8 @@ export default function SubscriptionPackagesScreen() {
 
   const { user, isLoaded: userLoaded } = useUser();
   const { getToken, refreshUser } = useAuth();
+  const { hasFreeTrialActive } = useSubscription();
+  const subscriptionService = useSubscriptionService();
   const router = useRouter();
   const colors = useThemeColors();
 
@@ -35,7 +40,33 @@ export default function SubscriptionPackagesScreen() {
       ]);
 
       if (packagesResponse) {
-        setPackages(packagesResponse);
+        // Sort packages based on SUBSCRIPTION_SYSTEM_GUIDE.md:
+        // 1. Free Trial first (only during promotional period)
+        // 2. Always Free second
+        // 3. Then rest by price (lowest first)
+        const sortedPackages = packagesResponse.sort((a: Package, b: Package) => {
+          const isPromotionalPeriod = subscriptionService.isPromotionalPeriodActive();
+          
+          // Free trial first, but only during promotional period
+          if (isPromotionalPeriod) {
+            if (a.category === 'free_trial' && b.category !== 'free_trial') return -1;
+            if (b.category === 'free_trial' && a.category !== 'free_trial') return 1;
+          }
+          
+          // Always Free second (after free trial if promotional period)
+          if (a.category === 'free' && b.category !== 'free' && b.category !== 'free_trial') return -1;
+          if (b.category === 'free' && a.category !== 'free' && a.category !== 'free_trial') return 1;
+          
+          // Sort other packages by price (lowest first)
+          if (a.category !== 'free' && a.category !== 'free_trial' && 
+              b.category !== 'free' && b.category !== 'free_trial') {
+            return a.price - b.price;
+          }
+          
+          return 0;
+        });
+        
+        setPackages(sortedPackages);
       }
     } catch (error) {
       console.error('Error loading data:', error);
@@ -55,7 +86,7 @@ export default function SubscriptionPackagesScreen() {
       // Get the user's current subscription from our custom auth
       const subscription = user.subscription;
       if (subscription && subscription.package_id) {
-        setCurrentSubscription(subscription.package_id);
+        setCurrentSubscription(String(subscription.package_id)); // Convert number to string
       } else {
         setCurrentSubscription(null);
       }
@@ -96,16 +127,7 @@ export default function SubscriptionPackagesScreen() {
               setLoading(true);
 
               const [freeTrialResponse] = await Promise.all([
-                  PaymentApi.startFreeTrial({
-                    userId: user.id,
-                    packageId: plan.id,
-                    language: '[*]',
-                    priceId: plan.stripe_price,
-                    amount: 0,
-                    currency: 'usd',
-                    method: 'No payment',
-                    type: 'free trial',
-                  }, await getToken()),
+                  PaymentApi.activateFreeTrial(await getToken()),
               ]);
 
               if(freeTrialResponse){
@@ -266,7 +288,37 @@ export default function SubscriptionPackagesScreen() {
           {packages.map((plan, index) => {
             const status = getPlanStatus(plan.id);
             const isCurrentPlan = status === 'current';
-
+            const isPromotionalPeriod = subscriptionService.isPromotionalPeriodActive();
+            
+            // Determine button behavior based on SUBSCRIPTION_SYSTEM_GUIDE.md
+            const shouldShowFreeTrialButton = (() => {
+              // For "All Language Free Trial" package - always show Start Free Trial button
+              if (plan.category === 'free_trial') {
+                return true;
+              }
+              
+              // For all other packages during promotional period - show Start Free Trial button
+              if (isPromotionalPeriod && plan.category !== 'free') {
+                return true;
+              }
+              
+              return false;
+            })();
+            
+            const shouldShowSubscribeButton = (() => {
+              // Never show Subscribe button during promotional period (except for Always Free)
+              if (isPromotionalPeriod && plan.category !== 'free') {
+                return false;
+              }
+              
+              // After promotional period, show Subscribe button for paid plans
+              if (!isPromotionalPeriod && plan.category !== 'free' && plan.category !== 'free_trial') {
+                return true;
+              }
+              
+              return false;
+            })();
+            
             // Define gradient colors with primary/secondary mix
             const gradientColors: readonly [string, string] =
               ([colors.primary || '#3847d6', colors.secondary || '#10B981'] as const);
@@ -289,6 +341,20 @@ export default function SubscriptionPackagesScreen() {
                   >
                     <Text style={styles.activeBadgeText}>
                       ⭐ CURRENTLY ACTIVE
+                    </Text>
+                  </LinearGradient>
+                )}
+                
+                {/* Free Trial Promotional Badge - Only for ALL Languages Free Trial */}
+                {plan.type === 'free_trial' && plan.label === 'ALL Languages Free Trial' && (
+                  <LinearGradient
+                    colors={['#FF6B6B', '#FF8E8E']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.activeBadge}
+                  >
+                    <Text style={styles.activeBadgeText}>
+                      🎁 LIMITED TIME OFFER
                     </Text>
                   </LinearGradient>
                 )}
@@ -342,39 +408,49 @@ export default function SubscriptionPackagesScreen() {
                     </TouchableOpacity>
                   ) : (
                     <>
-                      <TouchableOpacity
-                        onPress={() => handleSubscribe(plan)}
-                        style={styles.subscribeButton}
-                        activeOpacity={0.9}
-                      >
-                        <LinearGradient
-                          colors={gradientColors}
-                          start={{ x: 0, y: 0 }}
-                          end={{ x: 1, y: 0 }}
-                          style={styles.subscribeGradient}
-                        >
-                          <Text style={styles.subscribeButtonText}>
-                            Subscribe Now
-                          </Text>
-                        </LinearGradient>
-                      </TouchableOpacity>
-
-                      {/* Free Trial Button */}
-                      <TouchableOpacity
-                        onPress={() => handleFreeTrial(plan)}
-                        style={styles.freeTrialButton}
-                        activeOpacity={0.8}
-                      >
-                        <View style={styles.freeTrialContent}>
-                          <Ionicons name="gift-outline" size={20} color={colors.primary || '#007AFF'} />
-                          <Text style={styles.freeTrialButtonText}>
-                            Start Free Trial
+                      {plan.category === 'free' ? (
+                        // Free package - show default info
+                        <View style={styles.defaultPackageInfo}>
+                          <Ionicons name="checkmark-circle" size={24} color={colors.primary || '#007AFF'} />
+                          <Text style={styles.defaultPackageText}>
+                            Default subscription for all users
                           </Text>
                         </View>
-                        <Text style={styles.freeTrialSubtext}>
-                          Full access until Dec 31, 2025
-                        </Text>
-                      </TouchableOpacity>
+                      ) : hasFreeTrialActive && plan.category === 'free_trial' ? (
+                        // Free trial already activated - show badge
+                        <View style={styles.freeTrialPromotionContainer}>
+                          <FreeTrialActivatedBadge variant="gradient" showDate={true} />
+                        </View>
+                      ) : shouldShowFreeTrialButton ? (
+                        // Free trial package during promotional period - show button
+                        <View style={styles.freeTrialPromotionContainer}>
+                          <StartFreeTrialButton 
+                            onSuccess={() => {
+                              // Refresh user data after successful trial activation
+                              refreshUser();
+                              onRefresh();
+                            }}
+                          />
+                        </View>
+                      ) : shouldShowSubscribeButton ? (
+                        // Regular packages - show subscribe button only
+                        <TouchableOpacity
+                          onPress={() => handleSubscribe(plan)}
+                          style={styles.subscribeButton}
+                          activeOpacity={0.9}
+                        >
+                          <LinearGradient
+                            colors={gradientColors}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 0 }}
+                            style={styles.subscribeGradient}
+                          >
+                            <Text style={styles.subscribeButtonText}>
+                              Subscribe Now
+                            </Text>
+                          </LinearGradient>
+                        </TouchableOpacity>
+                      ) : null}
                     </>
                   )}
                 </View>
@@ -503,7 +579,7 @@ const createStyles = (colors: any) => StyleSheet.create({
   planName: {
     fontSize: 28,
     fontFamily: 'BerkshireSwash_400Regular',
-    color: colors.secondary || '#3847d6',
+    color: colors.tertiary || '#3847d6',
     marginBottom: 8,
   },
   planDescription: {
@@ -542,8 +618,8 @@ const createStyles = (colors: any) => StyleSheet.create({
     padding: 6,
     marginRight: 12,
     marginTop: 2,
-    width: 30,
-    height: 30,
+    width: 26,
+    height: 26,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -634,6 +710,24 @@ const createStyles = (colors: any) => StyleSheet.create({
     fontSize: 18,
     letterSpacing: 0.5,
   },
+  defaultPackageInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 20,
+    paddingHorizontal: 24,
+    backgroundColor: colors.surface || '#F8F9FA',
+    borderRadius: 20,
+    gap: 12,
+    borderWidth: 2,
+    borderColor: colors.primary || '#007AFF',
+  },
+  defaultPackageText: {
+    color: colors.primary || '#007AFF',
+    fontSize: 16,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
   footer: {
     paddingHorizontal: 24,
     paddingBottom: 40,
@@ -699,5 +793,9 @@ const createStyles = (colors: any) => StyleSheet.create({
   chevron: {
     fontSize: 14,
     color: '#6B7280',
+  },
+  freeTrialPromotionContainer: {
+    width: '100%',
+    marginTop: 8,
   },
 });

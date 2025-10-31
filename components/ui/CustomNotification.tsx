@@ -189,7 +189,11 @@ const CustomNotification: React.FC<CustomNotificationProps> = ({
 
                                 {actions.length > 0 && (
                                     <View style={styles.actionsContainer}>
-                                        {actions.map((action, index) => (
+                                        {actions.map((action: {
+                                            text: string;
+                                            onPress: () => void;
+                                            style?: 'default' | 'destructive' | 'cancel';
+                                        }, index: number) => (
                                             <TouchableOpacity
                                                 key={index}
                                                 style={[
@@ -231,12 +235,13 @@ const createStyles = (colors: any) => StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         paddingHorizontal: 20,
+        paddingBottom: 40, // Added bottom padding to prevent touching container border
     },
     notificationContainer: {
         backgroundColor: colors.card || colors.background || '#FFFFFF',
-        borderRadius: 16,
-        maxWidth: screenWidth - 40,
-        minWidth: screenWidth * 0.8,
+        borderRadius: 18, // Increased from 16
+        maxWidth: screenWidth - 32, // Decreased margins for larger container
+        minWidth: screenWidth * 0.85, // Increased from 0.8
         shadowColor: colors.shadow || '#000000',
         shadowOffset: {
             width: 0,
@@ -247,29 +252,30 @@ const createStyles = (colors: any) => StyleSheet.create({
         elevation: 10,
     },
     content: {
-        padding: 20,
+        padding: 24, // Increased from 20
     },
     header: {
         flexDirection: 'row',
         alignItems: 'flex-start',
     },
     iconContainer: {
-        marginRight: 12,
+        marginRight: 14, // Increased from 12
         marginTop: 2,
     },
     textContainer: {
         flex: 1,
     },
     title: {
-        fontSize: 18,
+        fontSize: 20, // Increased from 18
         fontWeight: '600',
         color: colors.text || '#000000',
-        marginBottom: 4,
+        marginBottom: 6, // Increased from 4
+        lineHeight: 24, // Added for better spacing
     },
     message: {
-        fontSize: 14,
+        fontSize: 16, // Increased from 14
         color: colors.textLight || '#666666',
-        lineHeight: 20,
+        lineHeight: 22, // Increased from 20
     },
     closeButton: {
         padding: 4,
@@ -278,20 +284,21 @@ const createStyles = (colors: any) => StyleSheet.create({
     actionsContainer: {
         flexDirection: 'row',
         justifyContent: 'flex-end',
-        marginTop: 20,
-        gap: 12,
+        marginTop: 24, // Increased from 20
+        gap: 14, // Increased from 12
+        paddingBottom: 4, // Added padding at bottom of actions
     },
     actionButton: {
-        paddingHorizontal: 16,
-        paddingVertical: 8,
+        paddingHorizontal: 18, // Increased from 16
+        paddingVertical: 10, // Increased from 8
         backgroundColor: colors.primary || '#007AFF',
-        borderRadius: 8,
-        minWidth: 80,
+        borderRadius: 10, // Increased from 8
+        minWidth: 90, // Increased from 80
         alignItems: 'center',
     },
     actionButtonText: {
         color: '#FFFFFF',
-        fontSize: 14,
+        fontSize: 16, // Increased from 14
         fontWeight: '500',
     },
     destructiveButton: {
