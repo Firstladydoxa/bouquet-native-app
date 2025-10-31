@@ -1,0 +1,78 @@
+﻿# EAS Ignore File
+# Files and directories to exclude from EAS builds
+
+# Documentation
+*.md
+*.docx
+*.xlsx
+THEME_WIDGET_GUIDE.md
+LARAVEL_BACKEND_AUTH_GUIDE.md
+API_ENDPOINT_STRUCTURE.md
+SUBSCRIPTION_SYSTEM_GUIDE.md
+TOKEN_REFRESH_GUIDE.md
+STAKEHOLDER_PRESENTATION.md
+STAKEHOLDER_PRESENTATION.docx
+Rhapsody-Languages-Repository.xlsx
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Build artifacts
+*.apk
+*.aab
+*.ipa
+tni-bouquetapps-development.apk
+
+# Screenshots and images not needed for build
+assets/images/Screenshot*.png
+assets/images/drawer-navigation-example.png
+
+# Test files
+**/__tests__/
+**/*.test.ts
+**/*.test.tsx
+**/*.spec.ts
+**/*.spec.tsx
+test-contexts.tsx
+
+# Scripts
+scripts/reset-project.js
+scripts/production-checklist.js
+
+# Text generation temp files
+text-generation
+
+# Node modules (handled by EAS)
+node_modules/
+
+# Environment files (should use EAS Secrets)
+.env
+.env*.local
+
+# Logs
+*.log
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Expo
+.expo/
+web-build/
+dist/
+
+# Android/iOS build folders
+android/
+ios/
