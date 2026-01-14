@@ -118,24 +118,25 @@ const CustomDrawerContent = (props: any) => {
       <DrawerContentScrollView {...props} style={styles.drawerStyle} contentContainerStyle={styles.scrollViewContent}>
 
       <DrawerItem
+        label={"Home"}
         icon={({ color, size }) => (
           <Ionicons
             name="home"
             size={30}
-            color={isRouteActive('/(tabs)') && !isRouteActive('/subscriptions') && !isRouteActive('/daily') ? colors.primary : colors.secondary}
+            color={isRouteActive('/index') ? colors.primary : colors.secondary}
           />
         )}
-        label={"Home"}
+        
         labelStyle={[
           styles.navItemLabel,
           { 
-            color: isRouteActive('/(tabs)') && !isRouteActive('/subscriptions') && !isRouteActive('/daily') ? colors.secondary : colors.text,
-            fontWeight: isRouteActive('/(tabs)') && !isRouteActive('/subscriptions') && !isRouteActive('/daily') ? '600' : '500'
+            color: isRouteActive('/index') ? colors.primary : colors.text,
+            fontWeight: isRouteActive('/index') ? '600' : '500'
           },
         ]}
         style={[
           styles.navItem,
-          isRouteActive('/(tabs)') && !isRouteActive('/subscriptions') && !isRouteActive('/daily') && styles.navItemActive
+          isRouteActive('/index') && styles.navItemActive
         ]}
         onPress={() => {
           router.push("/(rhapsodylanguages)/(drawer)/(tabs)");
@@ -143,9 +144,35 @@ const CustomDrawerContent = (props: any) => {
       />
 
       <DrawerItem
+        label={"Daily"}
         icon={({ color, size }) => (
           <Ionicons
-            name="person-circle"
+            name="book"
+            size={30}
+            color={isRouteActive('/daily') ? colors.primary : colors.secondary}
+          />
+        )}
+        
+        labelStyle={[
+          styles.navItemLabel,
+          { 
+            color: isRouteActive('/daily') ? colors.primary : colors.text,
+            fontWeight: isRouteActive('/daily') ? '600' : '500'
+          },
+        ]}
+        style={[
+          styles.navItem,
+          isRouteActive('/daily') && styles.navItemActive
+        ]}
+        onPress={() => {
+          router.push("/(rhapsodylanguages)/(drawer)/(tabs)/daily");
+        }}
+      />
+
+      <DrawerItem
+        icon={({ color, size }) => (
+          <Ionicons
+            name="card"
             size={30}
             color={isRouteActive('/subscriptions') ? colors.primary : colors.secondary}
           />
@@ -154,7 +181,7 @@ const CustomDrawerContent = (props: any) => {
         labelStyle={[
           styles.navItemLabel,
           { 
-            color: isRouteActive('/subscriptions') ? colors.secondary : colors.text,
+            color: isRouteActive('/subscriptions') ? colors.primary : colors.text,
             fontWeight: isRouteActive('/subscriptions') ? '600' : '500'
           },
         ]}
@@ -171,7 +198,7 @@ const CustomDrawerContent = (props: any) => {
       <DrawerItem
         icon={({ color, size }) => (
           <Ionicons
-            name="flag"
+            name="language"
             size={30}
             color={isRouteActive('/alphabet') ? colors.primary : colors.secondary}
           />
@@ -180,7 +207,7 @@ const CustomDrawerContent = (props: any) => {
         labelStyle={[
           styles.navItemLabel,
           { 
-            color: isRouteActive('/alphabet') ? colors.secondary : colors.text,
+            color: isRouteActive('/alphabet') ? colors.primary : colors.text,
             fontWeight: isRouteActive('/alphabet') ? '600' : '500'
           },
         ]}
@@ -197,7 +224,7 @@ const CustomDrawerContent = (props: any) => {
         label={"Languages by regions"}
         icon={({ color, size }) => (
           <Ionicons
-            name="book"
+            name="flag"
             size={30}
             color={isRouteActive('/regions') ? colors.primary : colors.secondary}
           />
@@ -206,7 +233,7 @@ const CustomDrawerContent = (props: any) => {
         labelStyle={[
           styles.navItemLabel,
           { 
-            color: isRouteActive('/regions') ? colors.secondary : colors.text,
+            color: isRouteActive('/regions') ? colors.primary : colors.text,
             fontWeight: isRouteActive('/regions') ? '600' : '500'
           },
         ]}
@@ -216,6 +243,32 @@ const CustomDrawerContent = (props: any) => {
         ]}
         onPress={() => {
           router.push("/regions/list");
+        }}
+      />
+
+      <DrawerItem
+        label={"Settings"}
+        icon={({ color, size }) => (
+          <Ionicons
+            name="settings"
+            size={30}
+            color={isRouteActive('/settings') ? colors.primary : colors.secondary}
+          />
+        )}
+        
+        labelStyle={[
+          styles.navItemLabel,
+          { 
+            color: isRouteActive('/settings') ? colors.primary : colors.text,
+            fontWeight: isRouteActive('/settings') ? '600' : '500'
+          },
+        ]}
+        style={[
+          styles.navItem,
+          isRouteActive('/settings') && styles.navItemActive
+        ]}
+        onPress={() => {
+          router.push("/(rhapsodylanguages)/(drawer)/(tabs)/settings");
         }}
       />
 

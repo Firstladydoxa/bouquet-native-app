@@ -128,7 +128,7 @@ export default function HomeScreen() {
   const handleUpcomingProgramPress = async () => {
     if (upcomingProgram?.link) {
       try {
-        await Linking.openURL('https://tniglobal.org/healingstreams');
+          await Linking.openURL( `${upcomingProgram.link}`);
       } catch (error) {
         Alert.alert('Error', 'Failed to open link');
       }

@@ -22,6 +22,11 @@ import { StripeProvider } from '@stripe/stripe-react-native';
 // Get Stripe publishable key from environment variables
 const STRIPE_PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY || '';
 
+export const unstable_settings = {
+  // Ensure any route can link back to `/`
+  initialRouteName: 'index',
+};
+
 export default function RootLayout() {
   const colorScheme = useColorScheme();
 

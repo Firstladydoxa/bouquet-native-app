@@ -105,7 +105,7 @@ export default function VerifyEmailScreen() {
           {/* Image Container */}
           <View style={authStyles.imageContainer}>
             <Image
-              source={require("../../assets/images/i3.png")}
+              source={require("../../assets/images/code-based-email-verification.jpg")}
               style={authStyles.image}
               contentFit="contain"
             />
