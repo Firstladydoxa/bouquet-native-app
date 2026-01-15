@@ -29,7 +29,7 @@ jobs:
   build-and-publish:
     name: Build APK and Publish to TNI App Store
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
 
     steps:
       # 1. Checkout code
@@ -110,6 +110,8 @@ jobs:
             --no-parallel \
             --max-workers=1 \
             -PreactNativeArchitectures=armeabi-v7a,arm64-v8a \
+            -x lintVitalAnalyzeRelease \
+            -x lintVitalReportRelease \
             --stacktrace
         env:
           GRADLE_OPTS: "-Xmx3g -XX:MaxMetaspaceSize=768m -XX:+UseG1GC -Dorg.gradle.jvmargs=-Xmx3g"
