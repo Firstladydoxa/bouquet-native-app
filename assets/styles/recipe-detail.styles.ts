@@ -1,4 +1,4 @@
-import { StyleSheet, Dimensions } from "react-native";
+import { Dimensions, StyleSheet } from "react-native";
 import { COLORS } from "../../constants/colors";
 
 const { height } = Dimensions.get("window");
@@ -41,7 +41,6 @@ export const recipeDetailStyles = StyleSheet.create({
     backgroundColor: "rgba(0, 0, 0, 0.3)",
     justifyContent: "center",
     alignItems: "center",
-    backdropFilter: "blur(10px)",
   },
   titleSection: {
     position: "absolute",
