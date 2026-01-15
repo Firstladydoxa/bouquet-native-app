@@ -539,7 +539,9 @@ export class AuthAPI {
         throw new Error('API configuration error. Please contact support.');
       }
 
-      const response = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
+      // Try /forgot-password endpoint without /auth prefix
+      // Password reset should not require authentication
+      const response = await fetch(`${API_BASE_URL}/forgot-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -582,7 +584,8 @@ export class AuthAPI {
         throw new Error('API configuration error. Please contact support.');
       }
 
-      const response = await fetch(`${API_BASE_URL}/auth/reset-password`, {
+      // Use /reset-password endpoint without /auth prefix
+      const response = await fetch(`${API_BASE_URL}/reset-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
