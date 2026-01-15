@@ -167,7 +167,7 @@ export default function MyLanguagesDailyReading() {
     }, [myLanguages, searchQuery]);
 
     // Render language item
-    const LanguageItem = React.memo(({ item }: { item: DailyRhapsodyLanguage }) => (
+    const LanguageItem = React.memo<{ item: DailyRhapsodyLanguage }>(({ item }) => (
         <TouchableOpacity style={styles.languageItem} onPress={() => handleLanguageSelect(item)}>
             <View style={styles.languageItemContent}>
                 <View style={styles.languageInfo}>
@@ -191,6 +191,7 @@ export default function MyLanguagesDailyReading() {
             </View>
         </TouchableOpacity>
     ));
+    LanguageItem.displayName = 'LanguageItem';
 
     const renderLanguageItem = useCallback(
         ({ item }: { item: DailyRhapsodyLanguage }) => <LanguageItem item={item} />,
@@ -258,7 +259,7 @@ export default function MyLanguagesDailyReading() {
                     <Ionicons name="library-outline" size={64} color={colors.textLight} />
                     <Text style={[styles.emptyTitle, { color: colors.text }]}>No Languages Available</Text>
                     <Text style={[styles.emptyMessage, { color: colors.textLight }]}>
-                        You don't have access to any Rhapsody languages yet. Start your free trial or purchase a subscription to begin reading.
+                        You don&apos;t have access to any Rhapsody languages yet. Start your free trial or purchase a subscription to begin reading.
                     </Text>
                     <TouchableOpacity 
                         style={[styles.exploreButton, { backgroundColor: colors.primary }]} 
@@ -337,7 +338,7 @@ export default function MyLanguagesDailyReading() {
                             <View style={styles.searchEmptyContainer}>
                                 <Ionicons name="search-outline" size={48} color={colors.textLight} />
                                 <Text style={[styles.searchEmptyText, { color: colors.textLight }]}>
-                                    No languages found matching "{searchQuery}"
+                                    No languages found matching &quot;{searchQuery}&quot;
                                 </Text>
                             </View>
                         }

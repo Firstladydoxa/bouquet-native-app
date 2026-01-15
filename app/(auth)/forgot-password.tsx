@@ -188,7 +188,7 @@ export default function ForgotPasswordScreen() {
                 activeOpacity={0.7}
               >
                 <Text style={authStyles.linkText}>
-                  Didn't receive the email? <Text style={authStyles.link}>Try again</Text>
+                  Didn&apos;t receive the email? <Text style={authStyles.link}>Try again</Text>
                 </Text>
               </TouchableOpacity>
             </View>

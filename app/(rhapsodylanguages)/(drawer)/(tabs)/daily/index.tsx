@@ -198,7 +198,7 @@ export default function GeneralDailyReading() {
     }, [languages, searchQuery]);
 
     // Render language item
-    const LanguageItem = React.memo(({ item }: { item: DailyRhapsodyLanguage }) => {
+    const LanguageItem = React.memo<{ item: DailyRhapsodyLanguage }>(({ item }) => {
         const accessCheck = DailyReadingUtils.checkLanguageAccess(
             item,
             subscriptionDetails?.language || [],
@@ -238,6 +238,7 @@ export default function GeneralDailyReading() {
             </TouchableOpacity>
         );
     });
+    LanguageItem.displayName = 'LanguageItem';
 
     const renderLanguageItem = useCallback(
         ({ item }: { item: DailyRhapsodyLanguage }) => <LanguageItem item={item} />,

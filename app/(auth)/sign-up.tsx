@@ -169,7 +169,7 @@ export default function SignUpScreen() {
         <View style={[authStyles.scrollContent, { justifyContent: 'center', alignItems: 'center' }]}>
           <Text style={authStyles.title}>Check Your Email</Text>
           <Text style={authStyles.subtitle}>
-            We've sent a verification link to {emailAddress}. Please click the link in your email to complete your registration.
+            We&apos;ve sent a verification link to {emailAddress}. Please click the link in your email to complete your registration.
           </Text>
           <TouchableOpacity 
             style={authStyles.button}
