@@ -1,0 +1,105 @@
+name: Release Production Build
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version number (e.g., 1.0.0)'
+        required: true
+
+jobs:
+  release:
+    name: Production Release
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 🏗 Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 🏗 Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: 'npm'
+
+      - name: 🏗 Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: 📦 Install dependencies
+        run: npm ci
+
+      - name: 🔢 Update version
+        if: github.event.inputs.version
+        run: |
+          npm version ${{ github.event.inputs.version }} --no-git-tag-version
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add package.json
+          git commit -m "chore: bump version to ${{ github.event.inputs.version }}"
+
+      - name: 🚀 Build Production APK
+        run: |
+          eas build --platform android --profile production --non-interactive --wait
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+      - name: 📥 Download Production APK
+        id: download
+        run: |
+          BUILD_URL=$(eas build:list --platform android --limit 1 --json | jq -r '.[0].artifacts.buildUrl')
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "build_url=$BUILD_URL" >> $GITHUB_OUTPUT
+          curl -L -o "rhapsody-languages-v${VERSION}.apk" "$BUILD_URL"
+
+      - name: 📤 Upload to Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-apk-v${{ steps.download.outputs.version }}
+          path: rhapsody-languages-v${{ steps.download.outputs.version }}.apk
+          retention-days: 90
+
+      - name: 📋 Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ steps.download.outputs.version }}
+          name: Rhapsody Languages v${{ steps.download.outputs.version }}
+          body: |
+            ## 🎉 Rhapsody Languages v${{ steps.download.outputs.version }}
+            
+            ### 📱 Android APK
+            Download the production APK from the assets below.
+            
+            ### 🔗 Build Information
+            - **Version:** ${{ steps.download.outputs.version }}
+            - **Commit:** ${{ github.sha }}
+            - **Build Date:** ${{ github.event.head_commit.timestamp }}
+            
+            ### 📥 Installation
+            1. Download the APK file
+            2. Enable "Install from unknown sources" on your Android device
+            3. Install the APK
+            
+          files: rhapsody-languages-v${{ steps.download.outputs.version }}.apk
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 📊 Release Summary
+        run: |
+          echo "### 🎉 Production Release Created!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** v${{ steps.download.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Platform:** Android" >> $GITHUB_STEP_SUMMARY
+          echo "**Build URL:** ${{ steps.download.outputs.build_url }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ APK uploaded to GitHub Release" >> $GITHUB_STEP_SUMMARY

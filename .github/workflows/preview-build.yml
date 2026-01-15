@@ -1,0 +1,63 @@
+name: Preview Build (On Demand)
+
+on:
+  workflow_dispatch:
+    inputs:
+      message:
+        description: 'Build description'
+        required: false
+        default: 'Manual preview build'
+
+jobs:
+  preview:
+    name: Build Preview APK
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 🏗 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🏗 Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: 'npm'
+
+      - name: 🏗 Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: 📦 Install dependencies
+        run: npm ci
+
+      - name: 🚀 Build Preview
+        run: |
+          echo "Building preview with message: ${{ github.event.inputs.message }}"
+          eas build --platform android --profile preview --non-interactive --wait --message "${{ github.event.inputs.message }}"
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+      - name: 📥 Download and Save APK
+        id: download
+        run: |
+          BUILD_URL=$(eas build:list --platform android --limit 1 --json | jq -r '.[0].artifacts.buildUrl')
+          echo "build_url=$BUILD_URL" >> $GITHUB_OUTPUT
+          curl -L -o preview-app.apk "$BUILD_URL"
+          
+      - name: 📤 Upload Preview APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: preview-apk-${{ github.run_number }}
+          path: preview-app.apk
+          retention-days: 14
+
+      - name: 📝 Summary
+        run: |
+          echo "### 📱 Preview Build Ready!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Message:** ${{ github.event.inputs.message }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Build URL:** ${{ steps.download.outputs.build_url }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Download the APK from the artifacts section above." >> $GITHUB_STEP_SUMMARY
