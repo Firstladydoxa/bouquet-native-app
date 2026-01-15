@@ -1,0 +1,196 @@
+name: Publish to TNI App Store
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'  # Triggers on version tags like v1.0.0, v1.0.1, etc.
+  workflow_dispatch:  # Allow manual trigger for testing
+
+env:
+  # App metadata - Update these for your app
+  APP_CATEGORY: "Education"
+  APP_SHORT_DESC: "Learn Biblical Hebrew, Koine Greek, and Aramaic through immersive, context-driven lessons from the Scriptures"
+  APP_FULL_DESC: |
+    Rhapsody Languages is your gateway to understanding the original languages of the Bible. 
+    
+    **Features:**
+    - 📖 Daily curated readings from Hebrew, Greek, and Aramaic texts
+    - 🎯 Context-driven learning with real scriptural passages
+    - 🔊 Audio pronunciations and transliterations
+    - 📚 Comprehensive vocabulary builder with flashcards
+    - 🎨 Beautiful, user-friendly interface with dark mode support
+    - 🔄 Progress tracking across all languages
+    - 💎 Free trial access with premium subscription options
+    - 🌍 Offline access to downloaded content
+    
+    Perfect for seminary students, biblical scholars, pastors, and anyone passionate about understanding Scripture in its original languages.
+
+jobs:
+  build-and-publish:
+    name: Build APK and Publish to TNI App Store
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      # 1. Checkout code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Set up JDK 17 for Android builds
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'gradle'
+
+      # 3. Set up Node.js
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      # 4. Install dependencies
+      - name: Install dependencies
+        run: npm ci
+
+      # 5. Run prebuild to generate native Android project
+      - name: Run Expo prebuild
+        run: npx expo prebuild --platform android --clean
+
+      # 6. Decode and setup keystore
+      - name: Setup Android keystore
+        run: |
+          echo "${{ secrets.KEYSTORE_FILE }}" | base64 -d > android/app/bouquet-release.keystore
+          echo "Keystore file created successfully"
+
+      # 7. Create keystore.properties file
+      - name: Create keystore.properties
+        run: |
+          cat > android/keystore.properties << EOF
+          storeFile=bouquet-release.keystore
+          storePassword=${{ secrets.KEYSTORE_PASSWORD }}
+          keyAlias=${{ secrets.KEY_ALIAS }}
+          keyPassword=${{ secrets.KEY_PASSWORD }}
+          EOF
+
+      # 8. Extract version information from build.gradle
+      - name: Extract version info
+        id: version_info
+        run: |
+          VERSION_NAME=$(grep "versionName" android/app/build.gradle | sed 's/.*versionName "\(.*\)"/\1/')
+          VERSION_CODE=$(grep "versionCode" android/app/build.gradle | sed 's/.*versionCode \(.*\)/\1/')
+          PACKAGE_NAME=$(grep "applicationId" android/app/build.gradle | sed "s/.*applicationId '\(.*\)'/\1/")
+          APP_NAME=$(grep "app_name" android/app/src/main/res/values/strings.xml | sed 's/.*>\(.*\)<.*/\1/')
+          
+          echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_OUTPUT
+          echo "VERSION_CODE=$VERSION_CODE" >> $GITHUB_OUTPUT
+          echo "PACKAGE_NAME=$PACKAGE_NAME" >> $GITHUB_OUTPUT
+          echo "APP_NAME=$APP_NAME" >> $GITHUB_OUTPUT
+          
+          echo "📱 App: $APP_NAME"
+          echo "📦 Package: $PACKAGE_NAME"
+          echo "🏷️ Version: $VERSION_NAME ($VERSION_CODE)"
+
+      # 9. Build release APK
+      - name: Build release APK
+        run: |
+          cd android
+          chmod +x ./gradlew
+          ./gradlew assembleRelease --no-daemon --stacktrace
+        env:
+          GRADLE_OPTS: "-Xmx4096m -XX:MaxMetaspaceSize=1024m"
+
+      # 10. Verify APK was created
+      - name: Verify APK
+        run: |
+          APK_PATH="android/app/build/outputs/apk/release/app-release.apk"
+          if [ -f "$APK_PATH" ]; then
+            APK_SIZE=$(du -h "$APK_PATH" | cut -f1)
+            echo "✅ APK built successfully: $APK_SIZE"
+            echo "APK_PATH=$APK_PATH" >> $GITHUB_ENV
+          else
+            echo "❌ APK file not found!"
+            exit 1
+          fi
+
+      # 11. Rename APK with version
+      - name: Rename APK
+        run: |
+          VERSION_NAME="${{ steps.version_info.outputs.VERSION_NAME }}"
+          mv android/app/build/outputs/apk/release/app-release.apk \
+             android/app/build/outputs/apk/release/rhapsody-languages-v${VERSION_NAME}.apk
+          echo "APK_PATH=android/app/build/outputs/apk/release/rhapsody-languages-v${VERSION_NAME}.apk" >> $GITHUB_ENV
+
+      # 12. Upload to TNI App Store
+      - name: Publish to TNI App Store
+        run: |
+          curl -X POST "${{ secrets.APPSTORE_API_URL }}/apps/publish" \
+            -H "Authorization: Bearer ${{ secrets.APPSTORE_API_KEY }}" \
+            -H "Content-Type: multipart/form-data" \
+            -F "apk=@${{ env.APK_PATH }}" \
+            -F "package_name=${{ steps.version_info.outputs.PACKAGE_NAME }}" \
+            -F "app_name=${{ steps.version_info.outputs.APP_NAME }}" \
+            -F "version_name=${{ steps.version_info.outputs.VERSION_NAME }}" \
+            -F "version_code=${{ steps.version_info.outputs.VERSION_CODE }}" \
+            -F "category=${{ env.APP_CATEGORY }}" \
+            -F "short_description=${{ env.APP_SHORT_DESC }}" \
+            -F "full_description=${{ env.APP_FULL_DESC }}" \
+            -F "changelog=Release notes for version ${{ steps.version_info.outputs.VERSION_NAME }}" \
+            --fail --show-error --silent --output response.json || exit 1
+          
+          echo "✅ Successfully published to TNI App Store"
+          cat response.json
+
+      # 13. Upload APK as GitHub artifact
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rhapsody-languages-v${{ steps.version_info.outputs.VERSION_NAME }}
+          path: ${{ env.APK_PATH }}
+          retention-days: 90
+
+      # 14. Create GitHub Release
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ${{ env.APK_PATH }}
+          body: |
+            ## Rhapsody Languages v${{ steps.version_info.outputs.VERSION_NAME }}
+            
+            **Package:** ${{ steps.version_info.outputs.PACKAGE_NAME }}
+            **Version Code:** ${{ steps.version_info.outputs.VERSION_CODE }}
+            **Category:** ${{ env.APP_CATEGORY }}
+            
+            ### Download
+            - APK available in TNI App Store
+            - Direct download attached to this release
+            
+            ### What's New
+            See RELEASE_NOTES.md for detailed changelog.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # 15. Cleanup
+      - name: Cleanup keystore
+        if: always()
+        run: |
+          rm -f android/app/bouquet-release.keystore
+          rm -f android/keystore.properties
+          echo "🧹 Cleaned up sensitive files"
+
+      # 16. Summary
+      - name: Job Summary
+        if: always()
+        run: |
+          echo "## 🎉 Publish Complete!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**App:** ${{ steps.version_info.outputs.APP_NAME }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** ${{ steps.version_info.outputs.VERSION_NAME }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Package:** ${{ steps.version_info.outputs.PACKAGE_NAME }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Category:** ${{ env.APP_CATEGORY }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Published to TNI App Store" >> $GITHUB_STEP_SUMMARY
+          echo "✅ GitHub Release created" >> $GITHUB_STEP_SUMMARY
+          echo "✅ APK artifact uploaded" >> $GITHUB_STEP_SUMMARY

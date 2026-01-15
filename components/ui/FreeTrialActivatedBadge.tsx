@@ -37,7 +37,7 @@ const FreeTrialActivatedBadge: React.FC<FreeTrialActivatedBadgeProps> = ({
             <View style={styles.textContainer}>
               <Text style={styles.title}>✨ Free Trial Active!</Text>
               {showDate && (
-                <Text style={styles.subtitle}>Valid until March 31, 2026</Text>
+                <Text style={styles.subtitle}>Valid until {FREE_TRIAL_DATES.DISPLAY_TEXT}</Text>
               )}
             </View>
           </View>
@@ -54,7 +54,7 @@ const FreeTrialActivatedBadge: React.FC<FreeTrialActivatedBadgeProps> = ({
             </Text>
             {showDate && (
               <Text style={[styles.whiteSubtext, { color: '#6B7280' }]}>
-                Until March 31, 2026
+                Until {FREE_TRIAL_DATES.DISPLAY_TEXT}
               </Text>
             )}
           </View>

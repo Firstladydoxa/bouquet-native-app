@@ -74,16 +74,26 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
     );
     
     // Check if user has active free trial
+    // Free trial can be identified by category === 'free_trial' with active status
     const userHasFreeTrialActive = !!(
       user.subscription &&
       typeof user.subscription === 'object' &&
-      (user.subscription.status === 'free_trial' || user.subscription.category === 'free_trial') &&
+      user.subscription.category === 'free_trial' &&
       user.subscription.status === 'active'
     );
     
     setHasSubscription(userHasSubscription);
     setHasAccess(userHasAccess);
     setHasFreeTrialActive(userHasFreeTrialActive);
+    
+    console.log('✅ Subscription state updated:', {
+      userId: user.id,
+      category: user.subscription?.category,
+      status: user.subscription?.status,
+      hasSubscription: userHasSubscription,
+      hasAccess: userHasAccess,
+      hasFreeTrialActive: userHasFreeTrialActive
+    });
     
     // If user has subscription object, use it directly (regardless of category)
     if (userHasAccess && user.subscription) {

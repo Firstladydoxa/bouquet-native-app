@@ -27,6 +27,17 @@ export const Colors = {
   },
 };
 
+/**
+ * Free Trial Campaign Dates
+ * Centralized configuration for the promotional free trial period
+ */
+export const FREE_TRIAL_DATES = {
+  START: '2026-01-01',
+  END: '2026-03-31',
+  END_WITH_TIME: '2026-03-31T23:59:59',
+  DISPLAY_TEXT: 'March 31, 2026',
+} as const;
+
 export const Fonts = Platform.select({
   ios: {
     /** iOS `UIFontDescriptorSystemDesignDefault` */

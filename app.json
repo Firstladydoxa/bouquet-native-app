@@ -20,7 +20,7 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.firstlady.tnibouquetappsreactnative"
+      "package": "org.tniglobal.rhapsodylanguages"
     },
     "web": {
       "output": "static",

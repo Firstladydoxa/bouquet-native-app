@@ -1,3 +1,4 @@
+import { FREE_TRIAL_DATES } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
 import useCustomNotification from '@/hooks/use-custom-notification';
 import { useThemeColors } from '@/hooks/use-themed-styles';
@@ -56,7 +57,7 @@ const FreeTrialWidget: React.FC<FreeTrialWidgetProps> = ({
                 // Show success message first
                 showSuccess(
                     'Free Trial Activated! 🎉',
-                    'You now have access to all languages until March 31, 2026.'
+                    `You now have access to all languages until ${FREE_TRIAL_DATES.DISPLAY_TEXT}.`
                 );
                 
                 // Call success callback immediately for UI updates
@@ -106,7 +107,7 @@ const FreeTrialWidget: React.FC<FreeTrialWidgetProps> = ({
                 </Text>
 
                 <Text style={[styles.subtitle, { color: colors.textLight }]}>
-                    Get full access to all languages until March 31, 2026.
+                    Get full access to all languages until {FREE_TRIAL_DATES.DISPLAY_TEXT}.
                 </Text>
 
                 <View style={styles.benefitContainer}>
