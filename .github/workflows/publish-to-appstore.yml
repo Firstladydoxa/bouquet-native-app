@@ -55,25 +55,31 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # 5. Run prebuild to generate native Android project
-      - name: Run Expo prebuild
-        run: npx expo prebuild --platform android --clean
-
-      # 6. Decode and setup keystore
+      # 5. Decode and setup keystore BEFORE prebuild
       - name: Setup Android keystore
         run: |
+          mkdir -p android/app
           echo "${{ secrets.KEYSTORE_FILE }}" | base64 -d > android/app/bouquet-release.keystore
-          echo "Keystore file created successfully"
+          echo "✅ Keystore file created successfully"
+          ls -lh android/app/bouquet-release.keystore
 
-      # 7. Create keystore.properties file
-      - name: Create keystore.properties
+      # 6. Run prebuild with local credentials
+      - name: Run Expo prebuild
+        run: npx expo prebuild --platform android --clean --no-install
+        env:
+          EXPO_NO_CAPABILITY_SYNC: 1
+          EAS_NO_CREDENTIALS: 1
+
+      # 7. Verify keystore still exists after prebuild
+      - name: Verify keystore
         run: |
-          cat > android/keystore.properties << EOF
-          storeFile=bouquet-release.keystore
-          storePassword=${{ secrets.KEYSTORE_PASSWORD }}
-          keyAlias=${{ secrets.KEY_ALIAS }}
-          keyPassword=${{ secrets.KEY_PASSWORD }}
-          EOF
+          if [ -f "android/app/bouquet-release.keystore" ]; then
+            echo "✅ Keystore verified"
+            ls -lh android/app/bouquet-release.keystore
+          else
+            echo "❌ Keystore missing after prebuild! Recreating..."
+            echo "${{ secrets.KEYSTORE_FILE }}" | base64 -d > android/app/bouquet-release.keystore
+          fi
 
       # 8. Extract version information from build.gradle
       - name: Extract version info
@@ -82,7 +88,7 @@ jobs:
           VERSION_NAME=$(grep "versionName" android/app/build.gradle | sed 's/.*versionName "\(.*\)"/\1/')
           VERSION_CODE=$(grep "versionCode" android/app/build.gradle | sed 's/.*versionCode \(.*\)/\1/')
           PACKAGE_NAME=$(grep "applicationId" android/app/build.gradle | sed "s/.*applicationId '\(.*\)'/\1/")
-          APP_NAME=$(grep "app_name" android/app/src/main/res/values/strings.xml | sed 's/.*>\(.*\)<.*/\1/')
+          APP_NAME=$(grep "app_name" android/app/src/main/res/values/strings.xml | sed 's/.*>\(.*\)<.*/\1/' || echo "Rhapsody Languages")
           
           echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_OUTPUT
           echo "VERSION_CODE=$VERSION_CODE" >> $GITHUB_OUTPUT
@@ -93,7 +99,7 @@ jobs:
           echo "📦 Package: $PACKAGE_NAME"
           echo "🏷️ Version: $VERSION_NAME ($VERSION_CODE)"
 
-      # 9. Build release APK
+      # 9. Build release APK with local signing
       - name: Build release APK
         run: |
           cd android
@@ -101,6 +107,10 @@ jobs:
           ./gradlew assembleRelease --no-daemon --stacktrace
         env:
           GRADLE_OPTS: "-Xmx4096m -XX:MaxMetaspaceSize=1024m"
+          ORG_GRADLE_PROJECT_KEYSTORE_FILE: bouquet-release.keystore
+          ORG_GRADLE_PROJECT_KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          ORG_GRADLE_PROJECT_KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          ORG_GRADLE_PROJECT_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
       # 10. Verify APK was created
       - name: Verify APK
