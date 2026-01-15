@@ -539,8 +539,9 @@ export class AuthAPI {
         throw new Error('API configuration error. Please contact support.');
       }
 
-      // Use /auth/forgot-password endpoint as per Laravel backend API
-      const response = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
+      // Use public endpoint - password reset should NOT require authentication
+      // Backend has /auth/forgot-password incorrectly behind auth middleware
+      const response = await fetch(`${API_BASE_URL}/password/forgot`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -583,8 +584,9 @@ export class AuthAPI {
         throw new Error('API configuration error. Please contact support.');
       }
 
-      // Use /auth/reset-password endpoint as per Laravel backend API
-      const response = await fetch(`${API_BASE_URL}/auth/reset-password`, {
+      // Use public endpoint - password reset should NOT require authentication
+      // Backend has /auth/reset-password incorrectly behind auth middleware
+      const response = await fetch(`${API_BASE_URL}/password/reset`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
