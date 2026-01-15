@@ -573,7 +573,7 @@ export class AuthAPI {
    * Reset password with token
    */
   static async resetPassword(payload: {
-    token: string;
+    code: string;        // Changed from 'token' to 'code' for mobile-friendly 6-digit code
     email: string;
     password: string;
     password_confirmation: string;

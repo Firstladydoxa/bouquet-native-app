@@ -15,7 +15,12 @@ export default function ForgotPasswordScreen() {
 
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
-  const [emailSent, setEmailSent] = useState(false);
+  const [codeSent, setCodeSent] = useState(false);
+  const [code, setCode] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [step, setStep] = useState<'email' | 'code' | 'password'>('email');
 
   // Use themed styles and colors
   const authStyles = useThemedStyles(createAuthStyles);
@@ -45,11 +50,12 @@ export default function ForgotPasswordScreen() {
       console.log('[ForgotPassword] Request result:', result);
 
       if (result.success) {
-        console.log('[ForgotPassword] Password reset email sent successfully');
-        setEmailSent(true);
+        console.log('[ForgotPassword] Password reset code sent successfully');
+        setCodeSent(true);
+        setStep('code');
         showSuccess(
-          "Email Sent! 📧",
-          "Check your email for the password reset link. It may take a few minutes to arrive."
+          "Code Sent! 📧",
+          "Check your email for a 6-digit code. It may take a few minutes to arrive."
         );
       } else {
         showError("Error", result.message?.text || 'Failed to send password reset email');
@@ -58,6 +64,75 @@ export default function ForgotPasswordScreen() {
       const errorMessage = err.message || "Failed to send password reset email. Please try again.";
       console.error('[ForgotPassword] Error:', err);
       showError("Error", errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle code verification (move to password step)
+  const handleVerifyCode = () => {
+    if (!code || code.length !== 6) {
+      showError("Error", "Please enter the 6-digit code");
+      return;
+    }
+    setStep('password');
+  };
+
+  // Handle resending the code
+  const handleResendCode = async () => {
+    setLoading(true);
+    try {
+      const result = await AuthAPI.requestPasswordReset(email);
+      if (result.success) {
+        showSuccess("Code Resent", "A new 6-digit code has been sent to your email");
+        setCode('');
+      }
+    } catch (err: any) {
+      showError("Error", err.message || "Failed to resend code");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle password reset with code
+  const handleResetPassword = async () => {
+    if (!password || !confirmPassword) {
+      showError("Error", "Please fill in all fields");
+      return;
+    }
+
+    if (password.length < 6) {
+      showError("Error", "Password must be at least 6 characters");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      showError("Error", "Passwords do not match");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const result = await AuthAPI.resetPassword({
+        email,
+        code,
+        password,
+        password_confirmation: confirmPassword
+      });
+
+      if (result.success) {
+        showSuccess(
+          "Success! 🎉",
+          "Your password has been reset successfully"
+        );
+        // Navigate to sign-in after a short delay
+        setTimeout(() => {
+          router.replace('/sign-in');
+        }, 1500);
+      }
+    } catch (err: any) {
+      showError("Error", err.message || "Failed to reset password");
     } finally {
       setLoading(false);
     }
@@ -92,16 +167,19 @@ export default function ForgotPasswordScreen() {
             />
           </View>
 
-          <Text style={authStyles.title}>Forgot Password?</Text>
+          <Text style={authStyles.title}>
+            {step === 'email' && 'Forgot Password?'}
+            {step === 'code' && 'Enter Reset Code'}
+            {step === 'password' && 'Create New Password'}
+          </Text>
           <Text style={[authStyles.subtitle, { color: colors.textLight }]}>
-            {emailSent 
-              ? "We've sent you an email with instructions to reset your password."
-              : "Enter your email address and we'll send you a link to reset your password."
-            }
+            {step === 'email' && "Enter your email address and we'll send you a 6-digit code to reset your password."}
+            {step === 'code' && `We sent a 6-digit code to ${email}`}
+            {step === 'password' && "Enter your new password below"}
           </Text>
 
           {/* FORM CONTAINER */}
-          {!emailSent && (
+          {step === 'email' && (
             <View style={authStyles.formContainer}>
               {/* Email Input */}
               <View style={authStyles.inputContainer}>
@@ -130,7 +208,7 @@ export default function ForgotPasswordScreen() {
                 activeOpacity={0.8}
               >
                 <Text style={authStyles.buttonText}>
-                  {loading ? "Sending..." : "Send Reset Link"}
+                  {loading ? "Sending..." : "Send Code"}
                 </Text>
               </TouchableOpacity>
 
@@ -147,48 +225,120 @@ export default function ForgotPasswordScreen() {
             </View>
           )}
 
-          {/* Email Sent Success State */}
-          {emailSent && (
+          {/* CODE INPUT STEP */}
+          {step === 'code' && (
             <View style={authStyles.formContainer}>
-              <View style={{ alignItems: 'center', paddingVertical: 20 }}>
-                <View style={{
-                  width: 80,
-                  height: 80,
-                  borderRadius: 40,
-                  backgroundColor: colors.primaryLight || colors.primary + '20',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  marginBottom: 20
-                }}>
-                  <Ionicons name="mail-open" size={40} color={colors.primary} />
-                </View>
-                <Text style={[authStyles.title, { fontSize: 20, marginBottom: 10 }]}>
-                  Check Your Email
-                </Text>
-                <Text style={[authStyles.subtitle, { textAlign: 'center', marginBottom: 30 }]}>
-                  We sent a password reset link to{'\n'}
-                  <Text style={{ fontWeight: '600', color: colors.text }}>{email}</Text>
-                </Text>
+              {/* Code Input */}
+              <View style={authStyles.inputContainer}>
+                <Ionicons 
+                  name="keypad-outline" 
+                  size={20} 
+                  color={colors.textLight} 
+                  style={{ marginRight: 10 }}
+                />
+                <TextInput
+                  style={[authStyles.textInput, { 
+                    flex: 1, 
+                    fontSize: 24, 
+                    fontWeight: '600',
+                    letterSpacing: 8,
+                    textAlign: 'center'
+                  }]}
+                  placeholder="000000"
+                  placeholderTextColor={colors.textLight}
+                  value={code}
+                  onChangeText={(text) => setCode(text.replace(/[^0-9]/g, '').slice(0, 6))}
+                  keyboardType="number-pad"
+                  maxLength={6}
+                  editable={!loading}
+                />
               </View>
 
               <TouchableOpacity
-                style={authStyles.authButton}
-                onPress={() => router.back()}
+                style={[authStyles.authButton, (loading || code.length !== 6) && authStyles.buttonDisabled]}
+                onPress={handleVerifyCode}
+                disabled={loading || code.length !== 6}
                 activeOpacity={0.8}
               >
-                <Text style={authStyles.buttonText}>Back to Sign In</Text>
+                <Text style={authStyles.buttonText}>Continue</Text>
               </TouchableOpacity>
 
+              {/* Resend Code Link */}
               <TouchableOpacity
-                style={[authStyles.linkContainer, { marginTop: 20 }]}
-                onPress={() => {
-                  setEmailSent(false);
-                  setEmail('');
-                }}
+                style={[authStyles.linkContainer, { marginTop: 15 }]}
+                onPress={handleResendCode}
+                disabled={loading}
                 activeOpacity={0.7}
               >
                 <Text style={authStyles.linkText}>
-                  Didn&apos;t receive the email? <Text style={authStyles.link}>Try again</Text>
+                  Didn&apos;t receive the code? <Text style={authStyles.link}>Resend</Text>
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {/* NEW PASSWORD STEP */}
+          {step === 'password' && (
+            <View style={authStyles.formContainer}>
+              {/* Password Input */}
+              <View style={authStyles.inputContainer}>
+                <Ionicons 
+                  name="lock-closed-outline" 
+                  size={20} 
+                  color={colors.textLight} 
+                  style={{ marginRight: 10 }}
+                />
+                <TextInput
+                  style={[authStyles.textInput, { flex: 1 }]}
+                  placeholder="New Password"
+                  placeholderTextColor={colors.textLight}
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry={!showPassword}
+                  autoCapitalize="none"
+                  editable={!loading}
+                />
+              </View>
+
+              {/* Confirm Password Input */}
+              <View style={authStyles.inputContainer}>
+                <Ionicons 
+                  name="lock-closed-outline" 
+                  size={20} 
+                  color={colors.textLight} 
+                  style={{ marginRight: 10 }}
+                />
+                <TextInput
+                  style={[authStyles.textInput, { flex: 1 }]}
+                  placeholder="Confirm New Password"
+                  placeholderTextColor={colors.textLight}
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                  secureTextEntry={!showPassword}
+                  autoCapitalize="none"
+                  editable={!loading}
+                />
+              </View>
+
+              {/* Show/Hide Password Toggle */}
+              <TouchableOpacity
+                style={[authStyles.linkContainer, { marginBottom: 15, alignSelf: 'flex-end' }]}
+                onPress={() => setShowPassword(!showPassword)}
+                activeOpacity={0.7}
+              >
+                <Text style={[authStyles.link, { fontSize: 14 }]}>
+                  {showPassword ? 'Hide' : 'Show'} Password
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[authStyles.authButton, loading && authStyles.buttonDisabled]}
+                onPress={handleResetPassword}
+                disabled={loading}
+                activeOpacity={0.8}
+              >
+                <Text style={authStyles.buttonText}>
+                  {loading ? "Resetting..." : "Reset Password"}
                 </Text>
               </TouchableOpacity>
             </View>
