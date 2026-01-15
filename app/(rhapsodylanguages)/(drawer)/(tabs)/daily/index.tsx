@@ -1,6 +1,5 @@
 import FreeTrialActivatedBadge from '@/components/ui/FreeTrialActivatedBadge';
 import StartFreeTrialButton from '@/components/ui/StartFreeTrialButton';
-import { useAuth } from '@/contexts/AuthContext';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { useThemeColors } from '@/hooks/use-themed-styles';
 import { MediaAPI } from '@/services/mediaApi';
@@ -24,19 +23,17 @@ import {
 } from 'react-native';
 import Pdf from 'react-native-pdf';
 
-const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+const { height: screenHeight } = Dimensions.get('window');
 
 export default function GeneralDailyReading() {
     const pdfRef = useRef<any>(null);
     const router = useRouter();
-    const { user } = useAuth();
     const { subscriptionDetails, hasFreeTrialActive } = useSubscription();
     const colors = useThemeColors();
     
     // Daily reading calculations
     const dailyInfo = DailyReadingUtils.getDailyReadingPages();
     const pagesToShow = DailyReadingUtils.getDailyReadingPageNumbers();
-    const progress = DailyReadingUtils.getMonthlyProgress(dailyInfo.dayOfMonth);
 
     // State management
     const [languages, setLanguages] = useState<DailyRhapsodyLanguage[]>([]);

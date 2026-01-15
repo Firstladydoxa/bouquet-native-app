@@ -156,7 +156,7 @@ export default function ListenLanguageScreen() {
         try {
             // Use the new MediaAPI to fetch today's daily audio
             const { filename, url } = await MediaAPI.fetchDailyAudio(
-                user!.id,
+                String(user!.id),
                 decodeURIComponent(code)
             );
 

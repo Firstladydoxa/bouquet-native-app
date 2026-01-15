@@ -36,7 +36,7 @@ export default function DownloadLanguageScreen() {
             setError(null);
 
             const fileName = await RhapsodyLanguagesAPI.fetchLanguageFile({
-                user_id: user!.id,
+                user_id: String(user!.id),
                 type: 'read',
                 language: decodeURIComponent(code),
             });
