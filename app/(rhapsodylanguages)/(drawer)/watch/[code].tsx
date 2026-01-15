@@ -68,7 +68,7 @@ export default function WatchVideoPage() {
         if (showControls && isPlaying) {
             controlsTimeoutRef.current = setTimeout(() => {
                 setShowControls(false);
-            }, 3000);
+            }, 3000) as any;
         }
         return () => {
             if (controlsTimeoutRef.current) {
