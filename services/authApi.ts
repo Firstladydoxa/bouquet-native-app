@@ -539,9 +539,8 @@ export class AuthAPI {
         throw new Error('API configuration error. Please contact support.');
       }
 
-      // Try /forgot-password endpoint without /auth prefix
-      // Password reset should not require authentication
-      const response = await fetch(`${API_BASE_URL}/forgot-password`, {
+      // Use /auth/forgot-password endpoint as per Laravel backend API
+      const response = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -584,8 +583,8 @@ export class AuthAPI {
         throw new Error('API configuration error. Please contact support.');
       }
 
-      // Use /reset-password endpoint without /auth prefix
-      const response = await fetch(`${API_BASE_URL}/reset-password`, {
+      // Use /auth/reset-password endpoint as per Laravel backend API
+      const response = await fetch(`${API_BASE_URL}/auth/reset-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
