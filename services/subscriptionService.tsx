@@ -42,7 +42,7 @@ export const useSubscriptionService = (): SubscriptionService => {
      * Check if promotional free trial period is still active
      */
     const isPromotionalPeriodActive = (): boolean => {
-      const promotionEndDate = new Date('2025-12-31T23:59:59');
+      const promotionEndDate = new Date('2026-03-31T23:59:59');
       const now = new Date();
       return now <= promotionEndDate;
     };
@@ -85,7 +85,7 @@ export const useSubscriptionService = (): SubscriptionService => {
       if (category !== 'free_trial') return false;
       
       // Check if trial hasn't expired
-      const trialEndDate = new Date('2025-12-31T23:59:59');
+      const trialEndDate = new Date('2026-03-31T23:59:59');
       const now = new Date();
       return now <= trialEndDate;
     };
@@ -120,7 +120,7 @@ export const useSubscriptionService = (): SubscriptionService => {
             requiresSubscription: false,
             shouldShowPurchaseOption: false,
             shouldShowFreeTrialOption: false,
-            message: 'You have access through your free trial (ends Dec 31, 2025)',
+            message: 'You have access through your free trial (ends March 31, 2026)',
             actionText: undefined
           };
         }
@@ -134,7 +134,7 @@ export const useSubscriptionService = (): SubscriptionService => {
               requiresSubscription: true,
               shouldShowPurchaseOption: false,
               shouldShowFreeTrialOption: true,
-              message: 'This is a premium language, but there\'s a promotional Free Trial running now till December 31st that gives access to all free + premium languages.',
+              message: 'This is a premium language, but there\'s a promotional Free Trial running now till March 31st, 2026 that gives access to all free + premium languages.',
               actionText: 'Start Free Trial'
             };
           } else {

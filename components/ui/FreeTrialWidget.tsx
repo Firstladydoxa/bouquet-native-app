@@ -56,7 +56,7 @@ const FreeTrialWidget: React.FC<FreeTrialWidgetProps> = ({
                 // Show success message first
                 showSuccess(
                     'Free Trial Activated! 🎉',
-                    'You now have access to all languages until December 31, 2025.'
+                    'You now have access to all languages until March 31, 2026.'
                 );
                 
                 // Call success callback immediately for UI updates
@@ -106,7 +106,7 @@ const FreeTrialWidget: React.FC<FreeTrialWidgetProps> = ({
                 </Text>
 
                 <Text style={[styles.subtitle, { color: colors.textLight }]}>
-                    Get full access to all languages until December 31, 2025.
+                    Get full access to all languages until March 31, 2026.
                 </Text>
 
                 <View style={styles.benefitContainer}>

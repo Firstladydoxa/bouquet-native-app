@@ -96,7 +96,7 @@ export default function PromotionalBanner({ onSuccess }: PromotionalBannerProps)
           {/* Timer Section */}
           <View style={styles.timerContainer}>
             <Ionicons name="time-outline" size={16} color="#FFFFFF" />
-            <Text style={styles.timerText}>Valid until December 31, 2025</Text>
+            <Text style={styles.timerText}>Valid until March 31, 2026</Text>
           </View>
         </View>
 

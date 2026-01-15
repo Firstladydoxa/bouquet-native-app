@@ -117,7 +117,7 @@ export default function SubscriptionPackagesScreen() {
 
     Alert.alert(
       'Start Free Trial',
-      'Get full access to all languages until December 31, 2025. No payment required!',
+      'Get full access to all languages until March 31, 2026. No payment required!',
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -131,17 +131,17 @@ export default function SubscriptionPackagesScreen() {
               ]);
 
               if(freeTrialResponse){
-                Alert.alert('Success', 'Free trial activated! You now have access to all languages until December 31, 2025.');
+                Alert.alert('Success', 'Free trial activated! You now have access to all languages until March 31, 2026.');
                 await refreshUser();
               }
 
               // Call backend API to activate free trial
               // For now, update user metadata locally
-              //await user?.update({ metadata: { ...user.metadata, freeTrialActive: true, freeTrialEnd: '2025-12-31T23:59:59', }, });
+              //await user?.update({ metadata: { ...user.metadata, freeTrialActive: true, freeTrialEnd: '2026-03-31T23:59:59', }, });
 
               Alert.alert(
                 'Free Trial Activated!',
-                'You now have access to all languages until December 31, 2025.',
+                'You now have access to all languages until March 31, 2026.',
                 [{ text: 'OK', onPress: () => router.push('/(rhapsodylanguages)/(drawer)/(tabs)') }]
               );
             } catch (error: any) {

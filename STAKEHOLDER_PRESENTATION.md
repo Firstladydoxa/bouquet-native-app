@@ -203,7 +203,7 @@ Status: Active by default
 Package ID: 12
 Category: free_trial
 Price: $0.00
-Duration: Until December 31, 2025
+Duration: Until March 31, 2026
 Languages Included: ALL languages (free + premium)
 Activation: User-initiated via "Start Free Trial" button
 Marker: ["*"] (wildcard for all languages)
@@ -336,7 +336,7 @@ New Status:
 
 ### Campaign Overview
 
-**Promotion Period**: Active until **December 31, 2025**
+**Promotion Period**: Active from **January 1, 2026** until **March 31, 2026**
 
 **Objective**: 
 - Introduce users to premium language experience
@@ -359,7 +359,7 @@ During Free Trial:
 ✅ All content formats (Read, Listen, Watch, Download)
 ✅ No restrictions on language switching
 ✅ Full premium experience
-✅ Valid until December 31, 2025
+✅ Valid until March 31, 2026
 ```
 
 #### Subscription Changes During Trial
@@ -376,7 +376,7 @@ During Free Trial:
 - Encourages users to experience premium before buying
 - Ensures users make informed decision post-trial
 
-#### After Free Trial Ends (January 1, 2026)
+#### After Free Trial Ends (April 1, 2026)
 
 **Automatic Changes**:
 1. Free trial subscriptions expire
@@ -412,14 +412,14 @@ Day 3-89: Using Free Trial
 → Downloads PDF content
 → Experiences full app capabilities
 
-Day 90 (Dec 31, 2025): Trial Expires
+Day 90 (March 31, 2026): Trial Expires
 → Receives expiry notification
 → Subscription reverts to "Always Free"
 → Premium language access removed
 → Free languages still accessible
 → Prompted to subscribe for continued premium access
 
-Day 91+ (Jan 1, 2026): Post-Trial
+Day 91+ (April 1, 2026): Post-Trial
 → Can purchase any paid subscription package
 → Selects 1 premium language at checkout
 → Pays via Stripe
@@ -922,9 +922,9 @@ One of the app's standout features is the **customizable theme color palette** t
 ✅ PDF downloads  
 ✅ Theme customization  
 ✅ No payment required  
-✅ Free trial opportunity (until Dec 31, 2025)
+✅ Free trial opportunity (until March 31, 2026)
 
-### For Trial Users (Until Dec 31, 2025)
+### For Trial Users (Until March 31, 2026)
 ✅ Everything free users get  
 ✅ **PLUS** Access to ALL premium languages  
 ✅ Test full app experience  

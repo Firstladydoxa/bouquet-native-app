@@ -187,10 +187,10 @@ export default function GeneralDailyReading() {
         }
     };
 
-    // Check if we're in the free trial promotional period (until Dec 31, 2025)
+    // Check if we're in the free trial promotional period (until March 31, 2026)
     const isInFreeTrialPeriod = () => {
         const currentDate = new Date();
-        const freeTrialEndDate = new Date('2025-12-31T23:59:59');
+        const freeTrialEndDate = new Date('2026-03-31T23:59:59');
         return currentDate <= freeTrialEndDate;
     };
 

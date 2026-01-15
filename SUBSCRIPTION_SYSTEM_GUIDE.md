@@ -19,7 +19,7 @@ The Rhapsody Languages subscription system manages user access to languages and 
 - **Package**: All Languages Free Trial package
 - **Language Access**: All languages (free + premium)
 - **Language Array**: `["*"]` (wildcard for all languages)
-- **Duration**: Until December 31, 2025
+- **Duration**: Until March 31, 2026
 - **Activation**: Via frontend promotion
 
 ### 3. Paid Subscriptions
@@ -367,7 +367,7 @@ const FreeTrialBanner = ({ onActivate, userSubscription }) => {
   
   return (
     <div className="promotion-banner">
-      <h3>🎉 Limited Time: Free Trial Until Dec 31, 2025!</h3>
+      <h3>🎉 Limited Time: Free Trial Until March 31, 2026!</h3>
       <p>Get access to ALL premium languages absolutely free!</p>
       <button onClick={onActivate} className="btn btn-primary">
         Start Free Trial
@@ -421,7 +421,7 @@ const handleSubscriptionError = (error) => {
 
 ## Important Notes
 
-- Free trial promotion expires December 31, 2025
+- Free trial promotion expires March 31, 2026
 - Always Free users cannot add premium languages
 - Free Trial users cannot add individual languages (they have all)
 - Paid users can add additional premium languages

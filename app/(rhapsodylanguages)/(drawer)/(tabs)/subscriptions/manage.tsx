@@ -10,12 +10,12 @@ import * as Sharing from 'expo-sharing';
 import * as WebBrowser from 'expo-web-browser';
 import React, { useState } from 'react';
 import {
-  Alert,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View
+    Alert,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -270,7 +270,7 @@ export default function ManageSubscriptionScreen() {
                     </Text>
                     <Text style={[styles.planDuration, { color: design.secondary }]}>
                       {subscriptionDetails.status === 'free_trial' 
-                        ? 'Until Dec 31, 2025'
+                        ? 'Until March 31, 2026'
                         : `/ ${subscriptionDetails.package?.duration || 'month'} days`
                       }
                     </Text>

@@ -71,7 +71,7 @@ const StartFreeTrialButton: React.FC<StartFreeTrialButtonProps> = ({
       // Show success message
       showSuccess(
         'Free Trial Activated! 🎉',
-        'You now have access to all premium languages until December 31, 2025!'
+        'You now have access to all premium languages until March 31, 2026!'
       );
 
       // Refresh user data BEFORE calling onSuccess or redirecting
@@ -133,7 +133,7 @@ const StartFreeTrialButton: React.FC<StartFreeTrialButtonProps> = ({
             ) : (
               <>
                 <Text style={styles.text}>🎁 {text}</Text>
-                <Text style={styles.subtext}>Until Dec 31, 2025</Text>
+                <Text style={styles.subtext}>Until March 31, 2026</Text>
               </>
             )}
           </LinearGradient>
