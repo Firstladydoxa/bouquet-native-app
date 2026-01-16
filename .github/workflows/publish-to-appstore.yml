@@ -143,8 +143,13 @@ jobs:
 
       # 12. Upload to TNI App Store
       - name: Publish to TNI App Store
+        id: publish
+        continue-on-error: true
         run: |
-          curl -X POST "${{ secrets.APPSTORE_API_URL }}/apps/publish" \
+          echo "📤 Uploading to TNI App Store..."
+          
+          # Try to publish
+          HTTP_CODE=$(curl -X POST "${{ secrets.APPSTORE_API_URL }}/apps/publish" \
             -H "Authorization: Bearer ${{ secrets.APPSTORE_API_KEY }}" \
             -H "Content-Type: multipart/form-data" \
             -F "apk=@${{ env.APK_PATH }}" \
@@ -156,10 +161,24 @@ jobs:
             -F "short_description=${{ env.APP_SHORT_DESC }}" \
             -F "full_description=${{ env.APP_FULL_DESC }}" \
             -F "changelog=Release notes for version ${{ steps.version_info.outputs.VERSION_NAME }}" \
-            --fail --show-error --silent --output response.json || exit 1
+            --write-out "%{http_code}" \
+            --output response.json)
           
-          echo "✅ Successfully published to TNI App Store"
-          cat response.json
+          echo "HTTP Status: $HTTP_CODE"
+          
+          if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "201" ]; then
+            echo "✅ Successfully published to TNI App Store"
+            cat response.json
+            echo "PUBLISH_STATUS=success" >> $GITHUB_OUTPUT
+          else
+            echo "⚠️ TNI App Store API returned HTTP $HTTP_CODE"
+            echo "Response:"
+            cat response.json || echo "No response body"
+            echo "PUBLISH_STATUS=failed" >> $GITHUB_OUTPUT
+            echo ""
+            echo "ℹ️ APK was built successfully and will be available in GitHub Release"
+            echo "   You can manually upload to TNI App Store later"
+          fi
 
       # 13. Upload APK as GitHub artifact
       - name: Upload APK artifact
@@ -202,13 +221,29 @@ jobs:
       - name: Job Summary
         if: always()
         run: |
-          echo "## 🎉 Publish Complete!" >> $GITHUB_STEP_SUMMARY
+          echo "## 🎉 Build Complete!" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**App:** ${{ steps.version_info.outputs.APP_NAME }}" >> $GITHUB_STEP_SUMMARY
           echo "**Version:** ${{ steps.version_info.outputs.VERSION_NAME }}" >> $GITHUB_STEP_SUMMARY
           echo "**Package:** ${{ steps.version_info.outputs.PACKAGE_NAME }}" >> $GITHUB_STEP_SUMMARY
           echo "**Category:** ${{ env.APP_CATEGORY }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "✅ Published to TNI App Store" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ steps.publish.outputs.PUBLISH_STATUS }}" = "success" ]; then
+            echo "✅ Published to TNI App Store" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ TNI App Store upload failed (API endpoint issue)" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**Manual Upload Required:**" >> $GITHUB_STEP_SUMMARY
+            echo "1. Download APK from GitHub Release below" >> $GITHUB_STEP_SUMMARY
+            echo "2. Upload manually to TNI App Store admin panel" >> $GITHUB_STEP_SUMMARY
+            echo "3. Or fix API endpoint and re-run workflow" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+          fi
+          
           echo "✅ GitHub Release created" >> $GITHUB_STEP_SUMMARY
           echo "✅ APK artifact uploaded" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Download APK" >> $GITHUB_STEP_SUMMARY
+          echo "- [GitHub Release](https://github.com/${{ github.repository }}/releases/tag/v${{ steps.version_info.outputs.VERSION_NAME }})" >> $GITHUB_STEP_SUMMARY
+          echo "- GitHub Artifacts (see below)" >> $GITHUB_STEP_SUMMARY
