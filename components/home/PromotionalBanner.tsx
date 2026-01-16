@@ -1,5 +1,6 @@
 import FreeTrialActivatedBadge from '@/components/ui/FreeTrialActivatedBadge';
 import StartFreeTrialButton from '@/components/ui/StartFreeTrialButton';
+import { FREE_TRIAL_DATES } from '@/constants/theme';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { useThemeColors } from '@/hooks/use-themed-styles';
 import { Ionicons } from '@expo/vector-icons';
