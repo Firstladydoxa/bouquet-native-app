@@ -212,7 +212,7 @@ jobs:
 
       # 13. Upload APK as GitHub artifact
       - name: Upload APK artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: rhapsody-languages-v${{ steps.version_info.outputs.VERSION_NAME }}
           path: ${{ env.APK_PATH }}
