@@ -82,7 +82,7 @@ const FreeTrialWidget: React.FC<FreeTrialWidgetProps> = ({
         } catch (error: any) {
             console.error('Free trial activation error:', error);
             showError(
-                'Activation Failed',
+                'Activation Error',
                 error.message || 'Failed to activate free trial. Please try again.'
             );
         } finally {

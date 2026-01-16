@@ -108,7 +108,7 @@ const StartFreeTrialButton: React.FC<StartFreeTrialButtonProps> = ({
       console.error('[StartFreeTrial] Error:', error);
       setLoading(false); // Stop loading on error
       showError(
-        'Activation Failed',
+        'Activation Error',
         error.message || 'Failed to activate free trial. Please try again.'
       );
     }
