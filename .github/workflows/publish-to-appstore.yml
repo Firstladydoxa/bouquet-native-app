@@ -30,6 +30,8 @@ jobs:
     name: Build APK and Publish to TNI App Store
     runs-on: ubuntu-latest
     timeout-minutes: 60
+    permissions:
+      contents: write  # Required to create releases
 
     steps:
       # 1. Checkout code
