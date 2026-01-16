@@ -387,8 +387,10 @@ const createStyles = (colors: any) => StyleSheet.create({
   },
   accordionContent: {
     paddingHorizontal: 16,
+    paddingTop: 16,
     paddingBottom: 16,
     gap: 12,
+    alignItems: 'center',
   },
   actionButton: {
     flexDirection: 'row',
@@ -398,7 +400,7 @@ const createStyles = (colors: any) => StyleSheet.create({
     paddingHorizontal: 20,
     borderRadius: 12,
     gap: 10,
-    width: '100%',
+    width: '70%',
   },
   buttonText: {
     color: '#FFFFFF',
