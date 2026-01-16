@@ -57,7 +57,36 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # 5. Decode and setup keystore BEFORE prebuild
+      # 5. Extract version from git tag and update app.json
+      - name: Update app.json with tag version
+        run: |
+          # Extract version from tag (e.g., v1.0.3 -> 1.0.3)
+          TAG_NAME="${GITHUB_REF#refs/tags/}"
+          VERSION_NAME="${TAG_NAME#v}"
+          
+          # Extract major.minor.patch and calculate versionCode
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION_NAME"
+          VERSION_CODE=$((MAJOR * 1000000 + MINOR * 1000 + PATCH))
+          
+          echo "📋 Tag: $TAG_NAME"
+          echo "📱 Version Name: $VERSION_NAME"
+          echo "🔢 Version Code: $VERSION_CODE"
+          
+          # Update app.json using Node.js for reliable JSON manipulation
+          node -e "
+            const fs = require('fs');
+            const appJson = JSON.parse(fs.readFileSync('app.json', 'utf8'));
+            appJson.expo.version = '$VERSION_NAME';
+            appJson.expo.android.versionCode = $VERSION_CODE;
+            fs.writeFileSync('app.json', JSON.stringify(appJson, null, 2));
+            console.log('✅ app.json updated with version $VERSION_NAME (code $VERSION_CODE)');
+          "
+          
+          # Verify the changes
+          grep -A 5 '"version":' app.json
+          grep -A 2 '"versionCode":' app.json
+
+      # 6. Decode and setup keystore BEFORE prebuild
       - name: Setup Android keystore
         run: |
           mkdir -p android/app
@@ -65,14 +94,14 @@ jobs:
           echo "✅ Keystore file created successfully"
           ls -lh android/app/bouquet-release.keystore
 
-      # 6. Run prebuild with local credentials
+      # 7. Run prebuild with local credentials (will now use updated app.json)
       - name: Run Expo prebuild
         run: npx expo prebuild --platform android --clean --no-install
         env:
           EXPO_NO_CAPABILITY_SYNC: 1
           EAS_NO_CREDENTIALS: 1
 
-      # 7. Verify keystore still exists after prebuild
+      # 8. Verify keystore still exists after prebuild
       - name: Verify keystore
         run: |
           if [ -f "android/app/bouquet-release.keystore" ]; then
@@ -83,7 +112,7 @@ jobs:
             echo "${{ secrets.KEYSTORE_FILE }}" | base64 -d > android/app/bouquet-release.keystore
           fi
 
-      # 8. Extract version information from build.gradle
+      # 9. Extract version information from build.gradle (for verification)
       - name: Extract version info
         id: version_info
         run: |
@@ -101,7 +130,7 @@ jobs:
           echo "📦 Package: $PACKAGE_NAME"
           echo "🏷️ Version: $VERSION_NAME ($VERSION_CODE)"
 
-      # 9. Build release APK with local signing
+      # 10. Build release APK with local signing
       - name: Build release APK
         run: |
           cd android
@@ -122,7 +151,7 @@ jobs:
           ORG_GRADLE_PROJECT_KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           ORG_GRADLE_PROJECT_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
-      # 10. Verify APK was created
+      # 11. Verify APK was created
       - name: Verify APK
         run: |
           APK_PATH="android/app/build/outputs/apk/release/app-release.apk"
@@ -135,7 +164,7 @@ jobs:
             exit 1
           fi
 
-      # 11. Rename APK with version
+      # 12. Rename APK with version
       - name: Rename APK
         run: |
           VERSION_NAME="${{ steps.version_info.outputs.VERSION_NAME }}"
@@ -143,7 +172,7 @@ jobs:
              android/app/build/outputs/apk/release/rhapsody-languages-v${VERSION_NAME}.apk
           echo "APK_PATH=android/app/build/outputs/apk/release/rhapsody-languages-v${VERSION_NAME}.apk" >> $GITHUB_ENV
 
-      # 12. Upload to TNI App Store
+      # 13. Upload to TNI App Store
       - name: Publish to TNI App Store
         id: publish
         continue-on-error: true
