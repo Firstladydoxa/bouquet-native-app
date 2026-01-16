@@ -1,4 +1,3 @@
-// if you're using your physical phone, change this to the deployed url
-// we have explained this in the course :-)
-export const API_URL = "http://localhost:5001/api";
+// Production API URLs - used in released APK
+export const API_URL = "https://standardapi.tniglobal.org/api";
 export const RHAPSODYLANGUAGES_API_URL = 'https://mediathek.tniglobal.org/api';
