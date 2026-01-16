@@ -452,6 +452,7 @@ const createStyles = (colors: any) => StyleSheet.create({
   actionButtonsContainer: {
     gap: 12,
     width: '100%',
+    alignItems: 'center',
   },
   noFormatsContainer: {
     alignItems: 'center',
