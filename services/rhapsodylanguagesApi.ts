@@ -1,4 +1,7 @@
-const RHAPSODYLANGUAGES_API = process.env.EXPO_PUBLIC_API_BASE_URL;
+import { API_URL } from '@/constants/api';
+
+// Use environment variable if available, otherwise fall back to constants
+const RHAPSODYLANGUAGES_API = process.env.EXPO_PUBLIC_API_BASE_URL || API_URL;
 
 const TNICCADMIN_API = "https://tniccadminapi.tniglobal.org/api";
 const MINISTRYPROGS_API = "https://ministryprogsapi.tniglobal.org/api";

@@ -57,7 +57,7 @@ export class DailyReadingUtils {
      * @returns Properly encoded PDF URL
      */
     static buildPdfUrl(fileName: string): string {
-        const baseUrl = process.env.EXPO_PUBLIC_BASE_URL || process.env.EXPO_PUBLIC_API_BASE_URL;
+        const baseUrl = process.env.EXPO_PUBLIC_BASE_URL || process.env.EXPO_PUBLIC_API_BASE_URL || 'https://mediathek.tniglobal.org';
         const encodedFileName = encodeURIComponent(fileName);
         return `${baseUrl}/read/${encodedFileName}`;
     }

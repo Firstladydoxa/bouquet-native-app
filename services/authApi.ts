@@ -1,9 +1,11 @@
+import { API_URL } from '@/constants/api';
 import { ApiResponse, RegisterPayload, RegisterResponse, RequestResponse, SignInPayload, SignInResponse, User, VerifyEmailPayload, VerifyEmailResponse } from '@/types';
 
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
+// Use environment variable if available, otherwise fall back to constants
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || API_URL;
 
 if (!API_BASE_URL) {
-  console.warn('⚠️ API_BASE_URL is not configured. Please check your .env file.');
+  console.error('❌ API_BASE_URL is not configured. Please check your .env file or constants/api.ts');
 }
 
 

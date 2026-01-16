@@ -1,6 +1,8 @@
-// Check if RHAPSODYLANGUAGES_API is available from env
-const RHAPSODYLANGUAGES_API = process.env.EXPO_PUBLIC_API_BASE_URL;
-const RHAPSODYLANGUAGES_URL = process.env.EXPO_PUBLIC_BASE_URL;
+import { API_URL } from '@/constants/api';
+
+// Use environment variables if available, otherwise fall back to constants
+const RHAPSODYLANGUAGES_API = process.env.EXPO_PUBLIC_API_BASE_URL || API_URL;
+const RHAPSODYLANGUAGES_URL = process.env.EXPO_PUBLIC_BASE_URL || API_URL.replace('/api', '');
 
 const allMonths = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
