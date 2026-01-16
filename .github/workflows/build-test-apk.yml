@@ -31,6 +31,9 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
+      - name: Generate Android project
+        run: npx expo prebuild --platform android --clean
+
       - name: Build Debug APK
         env:
           ORG_GRADLE_PROJECT_BOUQUET_RELEASE_STORE_FILE: ../bouquet-release.keystore
