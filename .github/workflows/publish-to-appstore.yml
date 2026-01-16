@@ -130,11 +130,22 @@ jobs:
           echo "📦 Package: $PACKAGE_NAME"
           echo "🏷️ Version: $VERSION_NAME ($VERSION_CODE)"
 
-      # 10. Build release APK with local signing
+      # 10. Ensure Gradle wrapper exists
+      - name: Setup Gradle wrapper
+        run: |
+          cd android
+          if [ ! -f "gradlew" ]; then
+            echo "⚠️ gradlew not found, generating wrapper..."
+            gradle wrapper --gradle-version 8.14.3
+          fi
+          chmod +x ./gradlew
+          echo "✅ Gradle wrapper ready"
+          ls -lh gradlew
+
+      # 11. Build release APK with local signing
       - name: Build release APK
         run: |
           cd android
-          chmod +x ./gradlew
           # Build only ARM architectures (most common) to reduce memory usage
           # Disable lint checks for CI (not needed for production, saves time/memory)
           ./gradlew assembleRelease \
@@ -151,7 +162,7 @@ jobs:
           ORG_GRADLE_PROJECT_KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           ORG_GRADLE_PROJECT_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
-      # 11. Verify APK was created
+      # 12. Verify APK was created
       - name: Verify APK
         run: |
           APK_PATH="android/app/build/outputs/apk/release/app-release.apk"
@@ -164,7 +175,7 @@ jobs:
             exit 1
           fi
 
-      # 12. Rename APK with version
+      # 13. Rename APK with version
       - name: Rename APK
         run: |
           VERSION_NAME="${{ steps.version_info.outputs.VERSION_NAME }}"
@@ -172,7 +183,7 @@ jobs:
              android/app/build/outputs/apk/release/rhapsody-languages-v${VERSION_NAME}.apk
           echo "APK_PATH=android/app/build/outputs/apk/release/rhapsody-languages-v${VERSION_NAME}.apk" >> $GITHUB_ENV
 
-      # 13. Upload to TNI App Store
+      # 14. Upload to TNI App Store
       - name: Publish to TNI App Store
         id: publish
         continue-on-error: true
