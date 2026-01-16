@@ -148,10 +148,9 @@ jobs:
         run: |
           echo "📤 Uploading to TNI App Store..."
           
-          # Try to publish
-          HTTP_CODE=$(curl -X POST "${{ secrets.APPSTORE_API_URL }}/apps/publish" \
-            -H "Authorization: Bearer ${{ secrets.APPSTORE_API_KEY }}" \
-            -H "Content-Type: multipart/form-data" \
+          # Upload using the correct endpoint and authentication
+          HTTP_CODE=$(curl -X POST "${{ secrets.APPSTORE_API_URL }}/apps/upload" \
+            -H "X-API-Key: ${{ secrets.APPSTORE_API_KEY }}" \
             -F "apk=@${{ env.APK_PATH }}" \
             -F "package_name=${{ steps.version_info.outputs.PACKAGE_NAME }}" \
             -F "app_name=${{ steps.version_info.outputs.APP_NAME }}" \
