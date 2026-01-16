@@ -1,3 +1,4 @@
+import { FREE_TRIAL_DATES } from '@/constants/theme';
 import { useThemeColors } from '@/hooks/use-themed-styles';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';

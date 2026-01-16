@@ -1,3 +1,4 @@
+import { FREE_TRIAL_DATES } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
 import useCustomNotification from '@/hooks/use-custom-notification';
 import { useThemeColors } from '@/hooks/use-themed-styles';
