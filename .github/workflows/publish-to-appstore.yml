@@ -105,13 +105,13 @@ jobs:
           cd android
           chmod +x ./gradlew
           # Build only ARM architectures (most common) to reduce memory usage
+          # Disable lint checks for CI (not needed for production, saves time/memory)
           ./gradlew assembleRelease \
             --no-daemon \
             --no-parallel \
             --max-workers=1 \
             -PreactNativeArchitectures=armeabi-v7a,arm64-v8a \
-            -x lintVitalAnalyzeRelease \
-            -x lintVitalReportRelease \
+            -Pandroid.lint.checkReleaseBuilds=false \
             --stacktrace
         env:
           GRADLE_OPTS: "-Xmx3g -XX:MaxMetaspaceSize=768m -XX:+UseG1GC -Dorg.gradle.jvmargs=-Xmx3g"
