@@ -9,25 +9,34 @@ on:
 env:
   # App metadata - Update these for your app
   APP_CATEGORY: "Education"
-  APP_SHORT_DESC: "Bringing God's Word to the world in over 8,123 languages - Daily devotionals, teachings, and testimonies that inspire faith"
+  APP_SHORT_DESC: "Access daily devotionals in 8,123+ languages - Free and Premium content for spiritual growth worldwide"
   APP_FULL_DESC: |
-    Rhapsody of Realities - A Life Guide for over 8,123 Languages
+    Rhapsody Languages - Your Gateway to Multilingual Devotional Content
     
-    It's been a journey of faith and love with tremendous changes and impact in the lives of billions of people around the world, who have experienced the joy, salvation, hope and increase that comes with receiving the word of God in the language of their hearts.
+    Rhapsody Languages is a comprehensive mobile application designed to provide seamless access to daily devotional content in multiple languages. Experience spiritual growth in your heart language with Rhapsody of Realities devotionals available in over 8,123 languages worldwide.
     
-    Starting with one language in 2001, Rhapsody Of Realities is now in over 8,123 languages and distributed in all 242 nations and territories of the world. Now more people can hear and receive the word of God with inspiring testimonies and miracles following.
+    **What is Rhapsody Languages?**
+    The app connects millions of believers globally to daily spiritual content, combining robust authentication, flexible subscription management, and an intuitive user experience. Browse devotionals by region, country, or language and access both free and premium content based on your subscription.
     
-    **Features:**
-    - 📖 Access to Rhapsody of Realities in 8,123+ languages
-    - 🌍 Daily devotionals and spiritual teachings
-    - 🎧 Read, Listen, and Download content in your heart language
-    - 📱 Beautiful, user-friendly interface with dark mode support
-    - 🔄 Offline access to downloaded content
-    - 💎 Free trial access with premium subscription options
-    - ✨ Inspiring testimonies and life-changing miracles
-    - 🙏 Join millions experiencing God's Word daily
+    **Key Features:**
+    - 🌍 Access devotionals in 8,123+ languages
+    - 📖 Free languages available to all users immediately
+    - 💎 Premium languages with subscription access
+    - 🗺️ Browse by regions, countries, or search by language name
+    - 📱 Beautiful, user-friendly interface with dark/light themes
+    - 🎁 Promotional free trial period (January - March 2026)
+    - 🔐 Secure authentication with email verification
+    - ⏰ Token refresh system for uninterrupted access
+    - 📊 Subscription management and payment history
+    - 🌓 Customizable themes for personalized experience
     
-    Perfect for believers worldwide seeking daily inspiration and spiritual growth in their native language.
+    **Perfect For:**
+    - Believers seeking daily devotionals in their native language
+    - Multi-lingual families accessing content in different languages
+    - Churches and ministries reaching diverse communities
+    - Anyone passionate about spiritual growth and biblical content
+    
+    Download Rhapsody Languages today and join millions experiencing God's Word daily in the language of their hearts!
 
 jobs:
   build-and-publish:
