@@ -19,7 +19,7 @@ import {
  */
 const TokenRefreshWidget: React.FC = () => {
   const colors = useThemeColors();
-  const { user, tokenExpiresAt, refreshToken, signOut } = useAuth();
+  const { user, tokenExpiresAt, refreshToken, refreshUser, signOut } = useAuth();
   const [showModal, setShowModal] = useState(false);
   const [isExpired, setIsExpired] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -73,16 +73,41 @@ const TokenRefreshWidget: React.FC = () => {
     
     try {
       console.log('[TokenRefresh] Refreshing authentication token...');
+      
+      if (!refreshToken) {
+        throw new Error('Refresh token function not available');
+      }
+      
+      // Refresh the JWT token
       await refreshToken();
       console.log('[TokenRefresh] Token refreshed successfully');
       
+      // Also refresh user data from /api/auth/me to get latest subscription info
+      if (refreshUser) {
+        await refreshUser();
+        console.log('[TokenRefresh] User data refreshed successfully');
+      }
+      
+      // Show success message
+      alert('Session refreshed successfully!');
       setShowModal(false);
     } catch (error: any) {
       console.error('[TokenRefresh] Failed to refresh token:', error);
+      console.error('[TokenRefresh] Error details:', {
+        message: error?.message,
+        stack: error?.stack,
+      });
+      
+      // Show detailed error message
+      const errorMessage = error?.message || 'Unknown error occurred';
+      alert(`Session refresh failed: ${errorMessage}\n\nPlease sign in again.`);
       
       // If refresh fails, sign out the user
-      alert('Session refresh failed. Please sign in again.');
-      await signOut();
+      try {
+        await signOut();
+      } catch (signOutError) {
+        console.error('[TokenRefresh] Error during sign out:', signOutError);
+      }
     } finally {
       setRefreshing(false);
     }

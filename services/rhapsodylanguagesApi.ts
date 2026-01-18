@@ -174,18 +174,15 @@ export const RhapsodyLanguagesAPI = {
    */
   fetchUserDetails: async (token: string | null) => {
     try {
-      console.log('Fetching user details from:', `${RHAPSODYLANGUAGES_API}/users`);
-      console.log('Token present:', !!token);
+      console.log('Fetching user details from:', `${RHAPSODYLANGUAGES_API}/auth/me`);
 
-      const response = await fetch(`${RHAPSODYLANGUAGES_API}/users`, {
+      const response = await fetch(`${RHAPSODYLANGUAGES_API}/auth/me`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
           ...(token && { Authorization: `Bearer ${token}` }),
         },
       });
-
-      console.log('User Details Response Status:', response.status, response.statusText);
 
       // Read the response body once and handle both success and error cases
       let jsonData;
@@ -195,8 +192,6 @@ export const RhapsodyLanguagesAPI = {
         console.error('Failed to parse user details response as JSON:', parseError);
         throw new Error('Invalid JSON response from user details service');
       }
-
-      console.log('User Details Parsed Response:', jsonData);
 
       if (!response.ok) {
         console.error('User Details Error Response:', jsonData);
@@ -210,7 +205,12 @@ export const RhapsodyLanguagesAPI = {
       }
       
       // Handle different response structures
+      // /auth/me returns: { success: true, data: { user: {...} } }
       if (jsonData.success && jsonData.data) {
+        // Check if user is nested in data.user (new /auth/me format)
+        if (jsonData.data.user) {
+          return jsonData.data.user;
+        }
         return jsonData.data;
       } else if (jsonData.data) {
         return jsonData.data;

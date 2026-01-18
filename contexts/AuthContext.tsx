@@ -1,9 +1,9 @@
 import { AuthAPI } from '@/services/authApi';
 import type {
-  AuthContextType,
-  SignInData,
-  SignUpData,
-  User
+    AuthContextType,
+    SignInData,
+    SignUpData,
+    User
 } from '@/types';
 import * as SecureStore from 'expo-secure-store';
 import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
@@ -235,12 +235,25 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const freshUserData = await RhapsodyLanguagesAPI.fetchUserDetails(token);
       
       if (freshUserData) {
-        console.log('User data refreshed successfully:', freshUserData);
+        console.log('🔄 [AuthContext] User data refreshed successfully');
+        console.log('🔄 [AuthContext] FULL USER DATA:', JSON.stringify(freshUserData, null, 2));
+        console.log('🔄 [AuthContext] Fresh user ID:', freshUserData.id);
+        console.log('🔄 [AuthContext] Fresh subscription:', JSON.stringify(freshUserData.subscription, null, 2));
+        console.log('🔄 [AuthContext] Subscription category:', freshUserData.subscription?.category);
+        console.log('🔄 [AuthContext] Subscription status:', freshUserData.subscription?.status);
         // Don't update expiry when just refreshing user data
         await SecureStore.setItemAsync(USER_KEY, JSON.stringify(freshUserData));
-        setUser(freshUserData);
+        // Force a new object reference with deep clone of subscription to ensure React detects the change
+        const newUser = { 
+          ...freshUserData,
+          subscription: freshUserData.subscription ? { ...freshUserData.subscription } : null
+        };
+        console.log('🔄 [AuthContext] About to call setUser with new user object');
+        console.log('🔄 [AuthContext] New user subscription reference:', newUser.subscription);
+        setUser(newUser);
+        console.log('✅ [AuthContext] setUser called successfully');
       } else {
-        console.log('No user data returned from API');
+        console.log('❌ [AuthContext] No user data returned from API');
       }
     } catch (error) {
       console.error('Refresh user error:', error);

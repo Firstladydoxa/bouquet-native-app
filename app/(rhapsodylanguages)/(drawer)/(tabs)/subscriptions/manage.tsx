@@ -22,6 +22,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 export default function ManageSubscriptionScreen() {
   const {
     hasSubscription,
+    hasFreeTrialActive,
     subscriptionDetails,
     paymentHistory,
     loading,
@@ -176,6 +177,7 @@ export default function ManageSubscriptionScreen() {
     );
   }
 
+  // Show empty state only if user has no active subscription (paid or free trial)
   if (!hasSubscription) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: design.background }]}>

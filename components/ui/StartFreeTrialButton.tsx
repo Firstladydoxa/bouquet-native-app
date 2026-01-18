@@ -1,5 +1,6 @@
 import { FREE_TRIAL_DATES } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSubscription } from '@/contexts/SubscriptionContext';
 import useCustomNotification from '@/hooks/use-custom-notification';
 import { useThemeColors } from '@/hooks/use-themed-styles';
 import { PaymentApi } from '@/services/paymentApi';
@@ -34,6 +35,7 @@ const StartFreeTrialButton: React.FC<StartFreeTrialButtonProps> = ({
 }) => {
   const colors = useThemeColors();
   const { user, token, refreshUser } = useAuth();
+  const { refreshSubscription } = useSubscription();
   const { notification, showSuccess, showError, hideNotification } = useCustomNotification();
   const [loading, setLoading] = useState(false);
 
@@ -49,14 +51,9 @@ const StartFreeTrialButton: React.FC<StartFreeTrialButtonProps> = ({
 
     try {
       console.log('[StartFreeTrial] Attempting to activate free trial...');
-      console.log('[StartFreeTrial] User ID:', user.id);
-      console.log('[StartFreeTrial] Token available:', !!token);
 
       // Call the activate free trial endpoint
-      // According to SUBSCRIPTION_SYSTEM_GUIDE.md, the endpoint only needs the auth token
       const result = await PaymentApi.activateFreeTrial(token);
-
-      console.log('[StartFreeTrial] Activation result:', result);
 
       // Check if activation was successful
       if (!result?.success) {
@@ -66,8 +63,12 @@ const StartFreeTrialButton: React.FC<StartFreeTrialButtonProps> = ({
         throw new Error(errorMsg);
       }
 
-      // Success - Free trial is active
-      console.log('[StartFreeTrial] Free trial activated successfully:', result);
+      console.log('[StartFreeTrial] Free trial activated successfully');
+
+      // Backend returns user with updated subscription in result.data.user
+      // Refresh user data from /api/auth/me to get the updated subscription
+      await refreshUser();
+      console.log('[StartFreeTrial] User data refreshed from /api/auth/me');
 
       // Show success message
       showSuccess(
@@ -75,34 +76,27 @@ const StartFreeTrialButton: React.FC<StartFreeTrialButtonProps> = ({
         `You now have access to all premium languages until ${FREE_TRIAL_DATES.DISPLAY_TEXT}!`
       );
 
-      // Refresh user data BEFORE calling onSuccess or redirecting
-      console.log('[StartFreeTrial] Refreshing user data...');
-      try {
-        await refreshUser();
-        console.log('[StartFreeTrial] User data refreshed successfully');
-      } catch (err) {
-        console.error('[StartFreeTrial] Failed to refresh user data:', err);
-      }
-
-      // Call success callback after refresh (for immediate UI updates with fresh data)
+      // Call success callback for immediate UI updates
       if (onSuccess) {
+        console.log('[StartFreeTrial] Calling onSuccess callback...');
         onSuccess();
       }
 
-      // If redirecting, do it after a short delay to let user see success message
+      setLoading(false);
+      
+      // Hide notification after delay
+      setTimeout(() => {
+        hideNotification();
+      }, 3000);
+      
+      // Redirect if requested
       if (redirectToSubscriptions) {
         setTimeout(() => {
-          setLoading(false); // Stop loading before redirect
-          hideNotification();
           router.replace('/(rhapsodylanguages)/(drawer)/(tabs)/subscriptions/manage');
-        }, 1500);
-      } else {
-        // Not redirecting - hide notification after delay
-        setTimeout(() => {
-          hideNotification();
-        }, 3000);
-        setLoading(false); // Stop loading immediately if not redirecting
+        }, 2000);
       }
+
+      return;
 
     } catch (error: any) {
       console.error('[StartFreeTrial] Error:', error);

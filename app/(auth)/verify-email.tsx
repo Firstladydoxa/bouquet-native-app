@@ -1,7 +1,6 @@
 import { createAuthStyles } from "@/assets/styles/auth.themed.styles";
 import { useAuth } from '@/contexts';
 import { useThemeColors, useThemedStyles } from '@/hooks/use-themed-styles';
-import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState } from "react";
 import {
@@ -16,46 +15,62 @@ import {
 } from "react-native";
 
 export default function VerifyEmailScreen() {
-  const router = useRouter();
-  const params = useLocalSearchParams<{ email?: string; autoResent?: string }>();
-  const paramEmail = params?.email;
-  const autoResent = params?.autoResent;
-  
-  // Add error boundary for context hooks
-  let verifyEmailFunc, resendVerificationCodeFunc, authStyles, colors;
   try {
+    console.log('[VerifyEmail] Component mounting...');
+    
+    const router = useRouter();
+    console.log('[VerifyEmail] Router initialized');
+    
+    const params = useLocalSearchParams<{ email?: string; autoResent?: string }>();
+    const paramEmail = params?.email;
+    const autoResent = params?.autoResent;
+    console.log('[VerifyEmail] Params:', { paramEmail, autoResent });
+    
+    // Call hooks unconditionally at the top
     const auth = useAuth();
-    verifyEmailFunc = auth.verifyEmail;
-    resendVerificationCodeFunc = auth.resendVerificationCode;
-    authStyles = useThemedStyles(createAuthStyles);
-    colors = useThemeColors();
-  } catch (error) {
-    console.error('[VerifyEmail] Context initialization error:', error);
-    // Return early with error message if contexts fail
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
-        <Text style={{ color: 'red', textAlign: 'center' }}>
-          Failed to load verification screen. Please restart the app.
+    console.log('[VerifyEmail] Auth context loaded:', { hasAuth: !!auth, hasVerifyEmail: !!auth?.verifyEmail });
+    
+    const authStyles = useThemedStyles(createAuthStyles);
+    console.log('[VerifyEmail] Auth styles loaded');
+    
+    const colors = useThemeColors();
+    console.log('[VerifyEmail] Colors loaded');
+    
+    const [email, setEmail] = useState(paramEmail || '');
+    const [code, setCode] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [resending, setResending] = useState(false);
+    
+    console.log('[VerifyEmail] State initialized, email:', email);
+    
+    // Check if verification code was automatically resent
+    const wasAutoResent = autoResent === 'true';
+
+    // Safety check: Ensure auth context is available
+    if (!auth || !auth.verifyEmail || !auth.resendVerificationCode) {
+      console.error('[VerifyEmail] Auth context missing!', { auth: !!auth, verifyEmail: !!auth?.verifyEmail, resendVerificationCode: !!auth?.resendVerificationCode });
+      return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20, backgroundColor: '#fff' }}>
+        <Text style={{ color: 'red', textAlign: 'center', fontSize: 16, fontWeight: 'bold', marginBottom: 10 }}>
+          Authentication Error
+        </Text>
+        <Text style={{ color: '#666', textAlign: 'center', marginBottom: 20 }}>
+          Authentication system is not available. Please restart the app.
         </Text>
         <TouchableOpacity 
-          onPress={() => router.back()}
-          style={{ marginTop: 20, padding: 10, backgroundColor: '#007AFF', borderRadius: 8 }}
+          onPress={() => router.replace('/(auth)/sign-up')}
+          style={{ marginTop: 20, padding: 12, backgroundColor: '#007AFF', borderRadius: 8 }}
         >
-          <Text style={{ color: 'white' }}>Go Back</Text>
+          <Text style={{ color: 'white', fontWeight: '600' }}>Back to Sign Up</Text>
         </TouchableOpacity>
       </View>
     );
-  }
-  
-  const [email, setEmail] = useState(paramEmail || '');
-  const [code, setCode] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [resending, setResending] = useState(false);
-  
-  // Check if verification code was automatically resent
-  const wasAutoResent = autoResent === 'true';
+    }
 
-  const handleVerification = async () => {
+    const { verifyEmail, resendVerificationCode } = auth;
+    console.log('[VerifyEmail] Functions extracted successfully');
+
+    const handleVerification = async () => {
     if (!email.trim()) {
       Alert.alert("Error", "Please enter your email address");
       return;
@@ -68,7 +83,7 @@ export default function VerifyEmailScreen() {
 
     setLoading(true);
     try {
-      const result = await verifyEmailFunc(email.trim(), code.trim());
+      const result = await verifyEmail(email.trim(), code.trim());
 
       if (result.status === 'complete') {
         Alert.alert(
@@ -100,7 +115,7 @@ export default function VerifyEmailScreen() {
 
     setResending(true);
     try {
-      const result = await resendVerificationCodeFunc(email.trim());
+      const result = await resendVerificationCode(email.trim());
       if (result.status === 'complete') {
         Alert.alert("Success", "Verification code sent! Please check your email.");
       } else {
@@ -145,15 +160,6 @@ export default function VerifyEmailScreen() {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          {/* Image Container */}
-          <View style={authStyles.imageContainer}>
-            <Image
-              source={require("../../assets/images/code-based-email-verification.jpg")}
-              style={authStyles.image}
-              contentFit="contain"
-            />
-          </View>
-
           {/* Title */}
           <Text style={authStyles.title}>Verify Your Email</Text>
           <Text style={authStyles.subtitle}>
@@ -243,4 +249,20 @@ export default function VerifyEmailScreen() {
       </KeyboardAvoidingView>
     </View>
   );
+  } catch (error) {
+    console.error('[VerifyEmail] FATAL ERROR in component:', error);
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20, backgroundColor: '#fff' }}>
+        <Text style={{ color: 'red', textAlign: 'center', fontSize: 18, fontWeight: 'bold', marginBottom: 10 }}>
+          Component Crash
+        </Text>
+        <Text style={{ color: '#666', textAlign: 'center', marginBottom: 20 }}>
+          {error instanceof Error ? error.message : 'Unknown error occurred'}
+        </Text>
+        <Text style={{ color: '#999', fontSize: 12, textAlign: 'center', marginBottom: 20 }}>
+          {error instanceof Error ? error.stack : ''}
+        </Text>
+      </View>
+    );
+  }
 }

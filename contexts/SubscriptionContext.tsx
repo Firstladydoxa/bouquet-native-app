@@ -45,9 +45,15 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
 
   // Check if user has an active subscription
   const checkSubscriptionStatus = () => {
-    console.log('Checking subscription status with user:', { 
-      user: user ? { id: user.id, subscription: user.subscription } : null 
-    });
+    console.log('🔍 [SubscriptionContext] === CHECKING SUBSCRIPTION STATUS ===');
+    console.log('🔍 [SubscriptionContext] User exists:', !!user);
+    if (user) {
+      console.log('🔍 [SubscriptionContext] User ID:', user.id);
+      console.log('🔍 [SubscriptionContext] Subscription exists:', !!user.subscription);
+      console.log('🔍 [SubscriptionContext] Subscription full object:', JSON.stringify(user.subscription, null, 2));
+      console.log('🔍 [SubscriptionContext] Subscription category:', user.subscription?.category);
+      console.log('🔍 [SubscriptionContext] Subscription status:', user.subscription?.status);
+    }
     
     if (!user) {
       console.log('No user available for subscription check');
@@ -58,11 +64,12 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
     // Check if user has subscription object and what category it is
     // Free subscriptions (category: 'free') are considered free access
     // Paid subscriptions (category: 'standard', 'basic', 'premium') are considered paid plans
+    // Free trial (category: 'free_trial') is now included for manage page visibility
     const userHasSubscription = !!(
       user.subscription && 
       typeof user.subscription === 'object' && 
       user.subscription.status === 'active' &&
-      ['standard', 'basic', 'premium'].includes(user.subscription.category)
+      ['standard', 'basic', 'premium', 'free_trial'].includes(user.subscription.category)
     );
     
     // User always has access (either free or paid subscription)
@@ -82,11 +89,16 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
       user.subscription.status === 'active'
     );
     
+    console.log('🎯 [SubscriptionContext] Setting state values:');
+    console.log('🎯 [SubscriptionContext] - hasSubscription (paid only):', userHasSubscription);
+    console.log('🎯 [SubscriptionContext] - hasAccess (any active):', userHasAccess);
+    console.log('🎯 [SubscriptionContext] - hasFreeTrialActive:', userHasFreeTrialActive);
+    
     setHasSubscription(userHasSubscription);
     setHasAccess(userHasAccess);
     setHasFreeTrialActive(userHasFreeTrialActive);
     
-    console.log('✅ Subscription state updated:', {
+    console.log('✅ [SubscriptionContext] State updated successfully:', {
       userId: user.id,
       category: user.subscription?.category,
       status: user.subscription?.status,
@@ -179,17 +191,21 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
 
   // Initialize subscription data when user is loaded
   useEffect(() => {
-    console.log('Subscription context useEffect triggered:', { 
-      userLoaded, 
-      userId: user?.id, 
-      userSubscription: user?.subscription 
-    });
+    console.log('🔔 [SubscriptionContext] useEffect TRIGGERED');
+    console.log('🔔 [SubscriptionContext] - userLoaded:', userLoaded);
+    console.log('🔔 [SubscriptionContext] - user exists:', !!user);
+    console.log('🔔 [SubscriptionContext] - userId:', user?.id);
+    console.log('🔔 [SubscriptionContext] - subscription:', user?.subscription);
+    console.log('🔔 [SubscriptionContext] - category:', user?.subscription?.category);
+    console.log('🔔 [SubscriptionContext] - status:', user?.subscription?.status);
     
-    if (userLoaded) {
+    if (userLoaded && user) {
+      console.log('🔔 [SubscriptionContext] Calling checkSubscriptionStatus()');
       setLoading(true);
       checkSubscriptionStatus();
+      setLoading(false);
     }
-  }, [userLoaded, user?.subscription]);
+  }, [userLoaded, user, user?.subscription?.category, user?.subscription?.status]);
 
   // Fetch additional data when subscription status changes
   useEffect(() => {

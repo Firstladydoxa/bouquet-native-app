@@ -219,11 +219,8 @@ export const PaymentApi = {
   activateFreeTrial: async (token: string | null): Promise<ApiResponse<SubscriptionDetails>> => {
     try {
       console.log('[PaymentApi] Activating free trial...');
-      console.log('[PaymentApi] API URL:', `${API_BASE_URL}/subscription/activate-free-trial`);
-      console.log('[PaymentApi] Token present:', !!token);
 
       // According to SUBSCRIPTION_SYSTEM_GUIDE.md, this endpoint only needs Authorization header
-      // No request body is required
       const response = await fetch(`${API_BASE_URL}/subscription/activate-free-trial`, {
         method: 'POST',
         headers: {
@@ -231,8 +228,6 @@ export const PaymentApi = {
           'Authorization': `Bearer ${token}`,
         },
       });
-
-      console.log('[PaymentApi] Response status:', response.status, response.statusText);
 
       // Read the response body once and handle both success and error cases
       let jsonData;
@@ -242,8 +237,6 @@ export const PaymentApi = {
         console.error('[PaymentApi] Failed to parse response as JSON:', parseError);
         throw new Error('Invalid JSON response from server');
       }
-
-      console.log('[PaymentApi] Response data:', jsonData);
 
       if (!response.ok) {
         console.error('[PaymentApi] Error response:', jsonData);
@@ -257,7 +250,10 @@ export const PaymentApi = {
 
       console.log('[PaymentApi] Free trial activation successful');
       
-      // Return the full response object including success flag and message
+      // Backend returns: { success: true, data: { subscription: {...}, user: {...} } }
+      // The user object in data.user includes the updated subscription
+      
+      // Return the full response object including success flag, message, and user
       return {
         success: jsonData.success || true,
         message: jsonData.message || 'Free trial activated successfully',

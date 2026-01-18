@@ -9,21 +9,25 @@ on:
 env:
   # App metadata - Update these for your app
   APP_CATEGORY: "Education"
-  APP_SHORT_DESC: "Learn Biblical Hebrew, Koine Greek, and Aramaic through immersive, context-driven lessons from the Scriptures"
+  APP_SHORT_DESC: "Bringing God's Word to the world in over 8,123 languages - Daily devotionals, teachings, and testimonies that inspire faith"
   APP_FULL_DESC: |
-    Rhapsody Languages is your gateway to understanding the original languages of the Bible. 
+    Rhapsody of Realities - A Life Guide for over 8,123 Languages
+    
+    It's been a journey of faith and love with tremendous changes and impact in the lives of billions of people around the world, who have experienced the joy, salvation, hope and increase that comes with receiving the word of God in the language of their hearts.
+    
+    Starting with one language in 2001, Rhapsody Of Realities is now in over 8,123 languages and distributed in all 242 nations and territories of the world. Now more people can hear and receive the word of God with inspiring testimonies and miracles following.
     
     **Features:**
-    - 📖 Daily curated readings from Hebrew, Greek, and Aramaic texts
-    - 🎯 Context-driven learning with real scriptural passages
-    - 🔊 Audio pronunciations and transliterations
-    - 📚 Comprehensive vocabulary builder with flashcards
-    - 🎨 Beautiful, user-friendly interface with dark mode support
-    - 🔄 Progress tracking across all languages
+    - 📖 Access to Rhapsody of Realities in 8,123+ languages
+    - 🌍 Daily devotionals and spiritual teachings
+    - 🎧 Read, Listen, and Download content in your heart language
+    - 📱 Beautiful, user-friendly interface with dark mode support
+    - 🔄 Offline access to downloaded content
     - 💎 Free trial access with premium subscription options
-    - 🌍 Offline access to downloaded content
+    - ✨ Inspiring testimonies and life-changing miracles
+    - 🙏 Join millions experiencing God's Word daily
     
-    Perfect for seminary students, biblical scholars, pastors, and anyone passionate about understanding Scripture in its original languages.
+    Perfect for believers worldwide seeking daily inspiration and spiritual growth in their native language.
 
 jobs:
   build-and-publish:

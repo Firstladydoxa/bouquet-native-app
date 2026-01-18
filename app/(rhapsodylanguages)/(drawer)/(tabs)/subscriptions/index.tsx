@@ -416,8 +416,9 @@ export default function SubscriptionPackagesScreen() {
                             Default subscription for all users
                           </Text>
                         </View>
-                      ) : hasFreeTrialActive && plan.category === 'free_trial' ? (
-                        // Free trial already activated - show badge
+                      ) : hasFreeTrialActive ? (
+                        // Free trial is active - show badge for ALL packages (including premium ones)
+                        // User has access to everything during free trial period
                         <View style={styles.freeTrialPromotionContainer}>
                           <FreeTrialActivatedBadge variant="gradient" showDate={true} />
                         </View>
