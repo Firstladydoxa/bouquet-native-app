@@ -17,8 +17,35 @@ import {
 
 export default function VerifyEmailScreen() {
   const router = useRouter();
-  const { email: paramEmail, autoResent } = useLocalSearchParams<{ email: string; autoResent?: string }>();
-  const { verifyEmail, resendVerificationCode } = useAuth();
+  const params = useLocalSearchParams<{ email?: string; autoResent?: string }>();
+  const paramEmail = params?.email;
+  const autoResent = params?.autoResent;
+  
+  // Add error boundary for context hooks
+  let verifyEmailFunc, resendVerificationCodeFunc, authStyles, colors;
+  try {
+    const auth = useAuth();
+    verifyEmailFunc = auth.verifyEmail;
+    resendVerificationCodeFunc = auth.resendVerificationCode;
+    authStyles = useThemedStyles(createAuthStyles);
+    colors = useThemeColors();
+  } catch (error) {
+    console.error('[VerifyEmail] Context initialization error:', error);
+    // Return early with error message if contexts fail
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
+        <Text style={{ color: 'red', textAlign: 'center' }}>
+          Failed to load verification screen. Please restart the app.
+        </Text>
+        <TouchableOpacity 
+          onPress={() => router.back()}
+          style={{ marginTop: 20, padding: 10, backgroundColor: '#007AFF', borderRadius: 8 }}
+        >
+          <Text style={{ color: 'white' }}>Go Back</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
   
   const [email, setEmail] = useState(paramEmail || '');
   const [code, setCode] = useState("");
@@ -27,10 +54,6 @@ export default function VerifyEmailScreen() {
   
   // Check if verification code was automatically resent
   const wasAutoResent = autoResent === 'true';
-
-  // Use themed styles and colors
-  const authStyles = useThemedStyles(createAuthStyles);
-  const colors = useThemeColors();
 
   const handleVerification = async () => {
     if (!email.trim()) {
@@ -45,7 +68,7 @@ export default function VerifyEmailScreen() {
 
     setLoading(true);
     try {
-      const result = await verifyEmail(email.trim(), code.trim());
+      const result = await verifyEmailFunc(email.trim(), code.trim());
 
       if (result.status === 'complete') {
         Alert.alert(
@@ -77,7 +100,7 @@ export default function VerifyEmailScreen() {
 
     setResending(true);
     try {
-      const result = await resendVerificationCode(email.trim());
+      const result = await resendVerificationCodeFunc(email.trim());
       if (result.status === 'complete') {
         Alert.alert("Success", "Verification code sent! Please check your email.");
       } else {
@@ -89,6 +112,26 @@ export default function VerifyEmailScreen() {
       setResending(false);
     }
   };
+
+  // Safety check: if no email is available and not editable, show error
+  if (!email && !paramEmail) {
+    return (
+      <View style={authStyles?.container || { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
+        <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 10, textAlign: 'center' }}>
+          Email Required
+        </Text>
+        <Text style={{ textAlign: 'center', marginBottom: 20, color: '#666' }}>
+          No email address was provided. Please go back and try again.
+        </Text>
+        <TouchableOpacity 
+          onPress={() => router.replace('/(auth)/sign-up')}
+          style={{ padding: 12, backgroundColor: '#007AFF', borderRadius: 8 }}
+        >
+          <Text style={{ color: 'white', fontWeight: '600' }}>Back to Sign Up</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   return (
     <View style={authStyles.container}>
