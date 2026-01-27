@@ -69,6 +69,13 @@ const TokenRefreshWidget: React.FC = () => {
   }, [tokenExpiresAt, user]);
 
   const handleRefreshToken = async () => {
+    // If token is already expired, don't attempt refresh - just sign out
+    if (isExpired) {
+      console.log('[TokenRefresh] Token already expired, redirecting to sign in...');
+      await handleSignOut();
+      return;
+    }
+    
     setRefreshing(true);
     
     try {
@@ -159,7 +166,7 @@ const TokenRefreshWidget: React.FC = () => {
 
           <Text style={styles.message}>
             {isExpired 
-              ? 'Your session has expired. Please refresh to continue using the app.'
+              ? 'Your session has expired. Please sign in again to continue using the app.'
               : `Your session will expire in ${timeRemaining}. Refresh now to stay signed in.`
             }
           </Text>
@@ -172,7 +179,10 @@ const TokenRefreshWidget: React.FC = () => {
               activeOpacity={0.8}
             >
               <LinearGradient
-                colors={[colors.primary || '#3B82F6', colors.secondary || '#10B981']}
+                colors={isExpired 
+                  ? ['#EF4444', '#DC2626']
+                  : [colors.primary || '#3B82F6', colors.secondary || '#10B981']
+                }
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={styles.buttonGradient}
@@ -181,8 +191,10 @@ const TokenRefreshWidget: React.FC = () => {
                   <ActivityIndicator color="#FFFFFF" size="small" />
                 ) : (
                   <>
-                    <Ionicons name="refresh" size={20} color="#FFFFFF" />
-                    <Text style={styles.refreshButtonText}>Refresh Session</Text>
+                    <Ionicons name={isExpired ? "log-in" : "refresh"} size={20} color="#FFFFFF" />
+                    <Text style={styles.refreshButtonText}>
+                      {isExpired ? 'Sign In Again' : 'Refresh Session'}
+                    </Text>
                   </>
                 )}
               </LinearGradient>
