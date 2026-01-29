@@ -26,7 +26,7 @@
     "@react-navigation/drawer": "^7.5.0",
     "@react-navigation/elements": "^2.6.3",
     "@react-navigation/native": "^7.1.8",
-    "@stripe/stripe-react-native": "0.50.3",
+    "@stripe/stripe-react-native": "0.57.3",
     "@types/react": "^18.0.0",
     "expo": "~54.0.31",
     "expo-av": "~16.0.8",
