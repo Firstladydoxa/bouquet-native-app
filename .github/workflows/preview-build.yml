@@ -47,7 +47,7 @@ jobs:
           curl -L -o preview-app.apk "$BUILD_URL"
           
       - name: 📤 Upload Preview APK
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: preview-apk-${{ github.run_number }}
           path: preview-app.apk

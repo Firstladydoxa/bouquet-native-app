@@ -63,7 +63,7 @@ jobs:
           ls -lh "$FILENAME"
 
       - name: 📤 Upload APK Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ steps.download.outputs.filename }}
           path: ${{ steps.download.outputs.filename }}
@@ -112,7 +112,7 @@ jobs:
           cat distribution-info.md
 
       - name: 📤 Upload Distribution Info
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: distribution-info
           path: distribution-info.md
